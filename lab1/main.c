@@ -43,9 +43,11 @@ void print_tree(node *tree)
 
 void destroy_tree(node *tree)
 {
-
-
-
+	if(tree==NULL)
+		return;
+	destroy_tree(tree->left);
+	destroy_tree(tree->right);
+	free(tree);
 }
 
 
@@ -179,10 +181,7 @@ int main(int argc, char **argv)
 
 	puts("Bye.\n");
 
-
-
-
-
+	destroy_tree(tree);
 	fclose(fp);
 	exit(0);
 }
