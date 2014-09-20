@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define ADDR_LEN	64	// address length in bits
+#define ADDR_LEN	32	// address length in bits
 #define LINE_LEN	ADDR_LEN + 6	// 1 whitespace char, max 3 interface digits, \n\0
 
 #define DEBUG
