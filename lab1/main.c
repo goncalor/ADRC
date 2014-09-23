@@ -81,7 +81,7 @@ int main(int argc, char **argv)
 		exit(0);
 	}
 
-/* load data from the forwarding table into a balanced tree */
+/* load data from the forwarding table and create a balanced tree */
 
 	node *tree = create_node();
 
@@ -98,39 +98,39 @@ int main(int argc, char **argv)
 
 		for(i=0; prefix[i] != '\0'; i++)
 		{
-			if(aux_node->right == NULL)	// both right and left will be null on a leaf
+			if(aux_node->right == NULL)	// the node is a leaf. right == left == null. create children both on the left and on the right
 			{
 				if(prefix[i]=='0')	// next node is on the left
 				{
-					aux_node->right = create_node();	// create leaf for balancing
+					/* create leaf for balancing */
+					aux_node->right = create_node();
 					aux_node->right->interf = aux_node->interf;
-					aux_node->left = create_node();	// create next node
+					/* create next node */
+					aux_node->left = create_node();
 					aux_node->left->interf = aux_node->interf;
-					aux_node = aux_node->left;	// go to next node
 				}
 				else	// next node is on the right
 				{
-					aux_node->left = create_node();	// create leaf for balancing
+					/* create leaf for balancing */
+					aux_node->left = create_node();
 					aux_node->left->interf = aux_node->interf;
-					aux_node->right = create_node();	// create next node
+					/* create next node */
+					aux_node->right = create_node();
 					aux_node->right->interf = aux_node->interf;
-					aux_node = aux_node->right;	// go to next node
 				}
-
 			}
-			else
+
+			/* keep going down the tree */
+			if(prefix[i]=='0')	// next node is on the left
 			{
-				if(prefix[i]=='0')	// next node is on the left
-				{
-					aux_node = aux_node->left;
-				}
-				else	// next node is on the right
-				{
-					aux_node = aux_node->right;
-				}
+				aux_node = aux_node->left;	// go to next node
+			}
+			else	// next node is on the right
+			{
+				aux_node = aux_node->right;	// go to next node
 			}
 		}
-		aux_node->interf = interf;	// place interface in this leaf
+		aux_node->interf = interf;	// place interface number in this leaf
 	}
 
 	#ifdef DEBUG
