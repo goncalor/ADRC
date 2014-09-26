@@ -1,14 +1,16 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <limits.h>
 
 #define ADDR_LEN	32	// address length in bits
 #define LINE_LEN	ADDR_LEN + 6	// 1 whitespace char, max 3 interface digits, \n\0
+#define DISCARD_VAL	SHRT_MAX	// interface value for discarded packets
 
 #define DEBUG
 
 typedef struct node{
-	char interf;	// interface
+	short interf;	// interface
 	struct node *right, *left;
 } node;
 
@@ -75,10 +77,11 @@ int main(int argc, char **argv)
 /* verify first line of file has empty prefix */
 
 	fgets(line, LINE_LEN, fp);
-	if(sscanf(line, "* %hd", &empty_interf) != 1)
+	if(sscanf(line, "* %hd", &empty_interf) != 1)	// no next hop defined for empty prefix. choose a value to signal that packets should be discarded
 	{
-		printf("First line of '%s' is not the empty prefix.\n\n", argv[1]);
-		exit(0);
+		empty_interf = DISCARD_VAL;
+		rewind(fp);	// reprocess first line bellow
+		printf("First line of '%s' is not the empty prefix. Some packets may be discarded.\n", argv[1]);
 	}
 
 /* load data from the forwarding table and create a balanced tree */
@@ -173,7 +176,10 @@ int main(int argc, char **argv)
 
 		}
 
-		printf("Forward to interface %d\n\n", interf);
+		if(interf != DISCARD_VAL)
+			printf("Forward to interface %d\n\n", interf);
+		else
+			puts("Discard packet.\n");
 
 		printf("Address to look up: ");
 		fgets(line, LINE_LEN, stdin);
