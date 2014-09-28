@@ -72,7 +72,7 @@ unsigned extract(unsigned nr, unsigned short p, unsigned short n)
 	return nr << p >> (sizeof(unsigned)*8 - n);
 }
 
-/* returns the skip value possible for the n entries in fib starting at index first. ignores the first pre bits. it is assumed all entries in the fib are different */
+/* returns the skip value (longest common prefix in the interval) possible for the n entries in fib starting at index first. ignores the first pre bits. it is assumed all entries in the fib are different */
 unsigned short compute_skip(fib_entry *fib, unsigned short pre, unsigned first, unsigned n)
 {
 	unsigned first_pre, last_pre;	// first and last prefixes in the interval
@@ -94,23 +94,74 @@ unsigned short compute_skip(fib_entry *fib, unsigned short pre, unsigned first, 
 /* returns the branch value possible for the n entries in fib starting at index first. ignores the first pre bits. */
 unsigned short compute_branch(fib_entry *fib, unsigned short pre, unsigned first, unsigned n)
 {
-	short branch, m;
+	short branch, m, found;
 	unsigned i;
 
 	if(n==2)
 		return 1;
 
-	for(branch=2, i=0; i<n; branch++)
+	branch=2;
+	do
 	{
-		for(i=0, m=0; m<((1<<branch)-1) && i<n; i++)
-		{
-			//printf("%d\t%d\t%d\n", branch, i, m);
+		found = 0;
+		for(m=0, i=0; i<n; i++)
 			if(extract(fib[first + i].prefix, pre, branch) == m)
+			{
 				m++;
-
-		}
+				if(m==(1<<branch))	// found all combinations for this branchfact
+				{
+					found = 1;
+					branch++;
+					break;
+				}
+			}
 	}
-	return branch-2;
+	while(found);
+
+	return --branch;
+}
+
+
+void build_trie(node *trie, fib_entry *fib, unsigned first, unsigned n, unsigned short pre, unsigned root_pos, unsigned *free_pos)
+{
+	short skip, branch;
+	unsigned first_child;	// position of first child for this node (local root)
+	unsigned p, k, bitpat;
+
+int i;
+for(i=0; i<n; i++)
+	printf("%u\n", fib[first+i].prefix);
+puts("");
+
+	if(n == 1)
+	{
+		trie[root_pos].branchfact = trie[root_pos].skip = 0;
+		trie[root_pos].pointer = first;
+		return;
+	}
+
+	skip = compute_skip(fib, pre, first, n);
+	branch = compute_branch(fib, pre + skip, first, n);	// ???
+
+	first_child = *free_pos;
+	trie[root_pos].branchfact = branch;
+	trie[root_pos].skip = skip;
+	trie[root_pos].pointer = first_child;
+
+	*free_pos = first_child + (1<<branch);
+
+	p = first;
+	for(bitpat=0; bitpat<(1<<branch); bitpat++)
+	{
+		k=0;
+		while(extract(fib[p + k].prefix, pre + skip, branch) == bitpat)
+			k++;
+
+		build_trie(trie, fib, p, k, pre + skip + branch/**/, first_child + bitpat, free_pos);
+
+		p += k;
+
+	}
 }
 
 
@@ -149,7 +200,7 @@ int main(int argc, char **argv)
 	unsigned nrlines = 0;	// nr of lines in the FIB file
 	fib_entry *fib;
 	char prefix_str[ADDR_LEN+1];	// +1 for \0
-	unsigned prefix, nexthop, i;
+	unsigned /*prefix,*/ nexthop, i;
 
 	while(!feof(fp))
 	{
@@ -212,18 +263,18 @@ int main(int argc, char **argv)
 	#endif
 
 
-printf("%hu\n", compute_skip(fib, 0, 0, nrlines));
+printf("skip: %hu\n", compute_skip(fib, 0, 0, nrlines));
 
-printf("%hu\n", compute_branch(fib, 0, 0, nrlines));
+printf("branchfact: %hu\n", compute_branch(fib, 0, 0, nrlines));
 
+	node *trie = malloc(100*sizeof(node));	//	!!
+	unsigned free_pos = 1;	/* next free position in the trie. the trie root takes the first position */
 
+	build_trie(trie, fib, 0, nrlines, 0, 0, &free_pos);
 
-
-
-
-
-
-
+puts("i\tbranch\tskip\tpointer");
+for(i=0; i<free_pos; i++)
+	printf("%d\t%d\t%d\t%d\t\n", i, trie[i].branchfact, trie[i].skip, trie[i].pointer);
 
 /* prompt for address and search trie */
 	puts("To exit just press Enter.\n");
