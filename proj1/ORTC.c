@@ -175,7 +175,7 @@ void clear_interior_next_hops(node *tree)
 {
 	if(tree->left != NULL)
 	{
-		tree->interf = -1;
+		tree->interf = DISCARD_VAL;
 		
 		clear_interior_next_hops(tree->left);
 		clear_interior_next_hops(tree->right);	

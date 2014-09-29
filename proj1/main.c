@@ -5,7 +5,7 @@
 
 #define ADDR_LEN	32	// address length in bits
 #define LINE_LEN	ADDR_LEN + 6	// 1 whitespace char, max 3 interface digits, \n\0
-#define DISCARD_VAL	SHRT_MAX	// interface value for discarded packets
+#define DISCARD_VAL	-1	// interface value for discarded packets
 
 #define DEBUG
 
