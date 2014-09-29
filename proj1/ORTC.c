@@ -120,89 +120,12 @@ int main(int argc, char **argv)
 	
 	
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 
 	#ifdef DEBUG
 	printf("loaded tree (in-order traversal): ");
 	print_tree(tree);
 	puts("\n");
 	#endif
-
-	puts("To exit just press Enter.\n");
-	/* prompt for address and search tree */
-
-	char address[ADDR_LEN+1];	// +1 for \0
-
-	printf("Address to look up: ");
-	fgets(line, LINE_LEN, stdin);
-
-	while(sscanf(line, "%[01]", address)==1)
-	{
-		for(i=strlen(address); i<ADDR_LEN; i++)
-			address[i]='0';
-		address[ADDR_LEN] = '\0';	// reestablish null byte
-		printf("Looking up %s\n", address);
-
-		/* search tree */
-
-		aux_node = tree;
-		for(i=0; i<strlen(address); i++)
-		{
-			if(aux_node->right != NULL)	// both right and left will be null on a leaf
-			{
-				if(address[i]=='0')	// go left
-					aux_node = aux_node->left;
-				else	// go right
-					aux_node = aux_node->right;
-			}
-			else	// reached a leaf. see interface
-			{
-				interf = aux_node->interf;
-			}
-
-		}
-
-		if(interf != DISCARD_VAL)
-			printf("Forward to interface %d\n\n", interf);
-		else
-			puts("Discard packet.\n");
-
-		printf("Address to look up: ");
-		fgets(line, LINE_LEN, stdin);
-	}
 
 	puts("Bye.\n");
 
