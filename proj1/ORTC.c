@@ -7,6 +7,8 @@
 #define LINE_LEN	ADDR_LEN + 6	// 1 whitespace char, max 3 interface digits, \n\0
 #define DISCARD_VAL	-1	// interface value for discarded packets
 
+
+
 #define DEBUG
 
 typedef struct node{
@@ -14,43 +16,15 @@ typedef struct node{
 	struct node *right, *left;
 } node;
 
-
-node *create_node(void)
-{
-	node *aux = malloc(sizeof(node));
-	if(aux==NULL)
-	{
-		puts("ERROR: Unable to allocate memory.");
-		exit(-1);
-	}
-	#ifdef DEBUG
-	aux->interf = 0;
-	#endif
-	aux->right = aux->left = NULL;
-	return aux;
-}
-
+node *create_node(void);
+void print_tree(node *tree);
+void destroy_tree(node *tree);
+void clear_interior_next_hops(node *tree);
 
 #ifdef DEBUG
-void print_tree(node *tree)
-{
-	if(tree==NULL)
-		return;
-	printf("%d ", tree->interf);
-	print_tree(tree->left);
-	print_tree(tree->right);
-}
+void print_tree(node *tree);
 #endif
 
-
-void destroy_tree(node *tree)
-{
-	if(tree==NULL)
-		return;
-	destroy_tree(tree->left);
-	destroy_tree(tree->right);
-	free(tree);
-}
 
 
 int main(int argc, char **argv)
@@ -74,7 +48,7 @@ int main(int argc, char **argv)
 	short interf, i;
 	node *aux_node;
 
-/* verify first line of file has empty prefix */
+	/* check if first line of file has empty prefix */
 
 	fgets(line, LINE_LEN, fp);
 	if(sscanf(line, "* %hd", &empty_interf) != 1)	// no next hop defined for empty prefix. choose a value to signal that packets should be discarded
@@ -84,7 +58,7 @@ int main(int argc, char **argv)
 		printf("First line of '%s' is not the empty prefix. Some packets may be discarded.\n", argv[1]);
 	}
 
-/* load data from the forwarding table and create a balanced tree */
+	/* load data from the forwarding table and create a balanced tree */
 
 	node *tree = create_node();
 
@@ -135,55 +109,23 @@ int main(int argc, char **argv)
 		}
 		aux_node->interf = interf;	// place interface number in this leaf
 	}
+	
+	/* ORTC - step 1: discard interior next-hops ('-1' is a cleared node) */
+	
+	clear_interior_next_hops(tree);
+	
+	/* ORTC - step 2: calculate most frequent next-hops by traversing bottom up */
+	
+	
+	
+	
+	
 
 	#ifdef DEBUG
-	printf("loaded tree: ");
+	printf("loaded tree (in-order traversal): ");
 	print_tree(tree);
 	puts("\n");
 	#endif
-
-	puts("To exit just press Enter.\n");
-/* prompt for address and search tree */
-
-	char address[ADDR_LEN+1];	// +1 for \0
-
-	printf("Address to look up: ");
-	fgets(line, LINE_LEN, stdin);
-
-	while(sscanf(line, "%[01]", address)==1)
-	{
-		for(i=strlen(address); i<ADDR_LEN; i++)
-			address[i]='0';
-		address[ADDR_LEN] = '\0';	// reestablish null byte
-		printf("Looking up %s\n", address);
-
-		/* search tree */
-
-		aux_node = tree;
-		for(i=0; i<strlen(address); i++)
-		{
-			if(aux_node->right != NULL)	// both right and left will be null on a leaf
-			{
-				if(address[i]=='0')	// go left
-					aux_node = aux_node->left;
-				else	// go right
-					aux_node = aux_node->right;
-			}
-			else	// reached a leaf. see interface
-			{
-				interf = aux_node->interf;
-			}
-
-		}
-
-		if(interf != DISCARD_VAL)
-			printf("Forward to interface %d\n\n", interf);
-		else
-			puts("Discard packet.\n");
-
-		printf("Address to look up: ");
-		fgets(line, LINE_LEN, stdin);
-	}
 
 	puts("Bye.\n");
 
@@ -191,3 +133,52 @@ int main(int argc, char **argv)
 	fclose(fp);
 	exit(0);
 }
+
+
+
+
+
+node *create_node(void)
+{
+	node *aux = malloc(sizeof(node));
+	if(aux==NULL)
+	{
+		puts("ERROR: Unable to allocate memory.");
+		exit(-1);
+	}
+	#ifdef DEBUG
+	aux->interf = 0;
+	#endif
+	aux->right = aux->left = NULL;
+	return aux;
+}
+
+void print_tree(node *tree)
+{
+	if(tree==NULL)
+		return;
+	printf("%d ", tree->interf);
+	print_tree(tree->left);
+	print_tree(tree->right);
+}
+
+void destroy_tree(node *tree)
+{
+	if(tree==NULL)
+		return;
+	destroy_tree(tree->left);
+	destroy_tree(tree->right);
+	free(tree);
+}
+
+void clear_interior_next_hops(node *tree)
+{
+	if(tree->left != NULL)
+	{
+		tree->interf = DISCARD_VAL;
+		
+		clear_interior_next_hops(tree->left);
+		clear_interior_next_hops(tree->right);	
+	}
+}
+
