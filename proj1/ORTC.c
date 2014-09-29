@@ -116,6 +116,36 @@ int main(int argc, char **argv)
 	
 	/* ORTC - step 2: calculate most frequent next-hops by traversing bottom up */
 	
+
+	A#B = { A e B se A e B != vazio
+			A com B se A e B = vazio }
+
+	A tem lista
+	B tem lista
+
+	cria lista temporária C
+
+	para cada elemento da lista de A, se tb estiver presente na lista B, adicionar à lista C
+	se nenhum elemento de A estiver presente em B, concatenar ambas em C
+	
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	
 	
 	
