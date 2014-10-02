@@ -190,7 +190,7 @@ node *create_node(void)
 		exit(-1);
 	}
 	#ifdef DEBUG
-	aux->interface_list = LSTinit();
+	aux->interface_list = LSTadd(NULL, makeItem(DISCARD_VAL));
 	#endif
 	aux->right = aux->left = NULL;
 	return aux;

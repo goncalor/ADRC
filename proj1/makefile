@@ -1,8 +1,12 @@
 compression: ORTC.o list.o
-	gcc ORTC.o list.o -o compression
+	gcc -g -Wall ORTC.o list.o -o compression
 
 ORTC.o: ORTC.c
-	gcc -c ORTC.c
+	gcc -g -Wall -c ORTC.c
 
 list.o: list.c list.h item.h
-	gcc -c list.c
+	gcc -g -Wall -c list.c
+
+clean: 
+	clear
+	rm *.o
