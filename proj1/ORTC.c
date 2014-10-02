@@ -3,6 +3,8 @@
 #include <string.h>
 #include <limits.h>
 
+#include "list.h"
+
 #define ADDR_LEN	32	// address length in bits
 #define LINE_LEN	ADDR_LEN + 6	// 1 whitespace char, max 3 interface digits, \n\0
 #define DISCARD_VAL	-1	// interface value for discarded packets
@@ -12,10 +14,12 @@
 #define DEBUG
 
 typedef struct node{
-	short interf;	// interface
+	list * interface_list;
 	struct node *right, *left;
 } node;
 
+short * makeItem(short interface);
+void destroyItem(short * interface_pointer);
 node *create_node(void);
 void print_tree(node *tree);
 void destroy_tree(node *tree);
@@ -116,10 +120,19 @@ int main(int argc, char **argv)
 	
 	/* ORTC - step 2: calculate most frequent next-hops by traversing bottom up */
 	
+
+	/*A#B = { A e B se A e B != vazio
+			A com B se A e B = vazio }
+
+	A tem lista
+	B tem lista
+
+	cria lista temporária C
+
+	para cada elemento da lista de A, se tb estiver presente na lista B, adicionar à lista C
+	se nenhum elemento de A estiver presente em B, concatenar ambas em C
 	
-	
-	
-	
+	*/	
 
 	#ifdef DEBUG
 	printf("loaded tree (in-order traversal): ");
@@ -136,7 +149,26 @@ int main(int argc, char **argv)
 
 
 
+short * makeItem(short interface)
+{
+	short * temp = malloc(sizeof(short));
+	
+	if(temp == NULL)
+	{
+		puts("error allocating memory");
+		exit(-1);
+	}
+	return temp;
+}
 
+void destroyItem(short * interface_pointer)
+{
+	if (interface_pointer != NULL)
+		free(interface_pointer);
+	
+	return;
+}
+	 
 
 node *create_node(void)
 {
@@ -147,7 +179,7 @@ node *create_node(void)
 		exit(-1);
 	}
 	#ifdef DEBUG
-	aux->interf = 0;
+	aux->interface_list = LSTinit();
 	#endif
 	aux->right = aux->left = NULL;
 	return aux;
@@ -168,6 +200,7 @@ void destroy_tree(node *tree)
 		return;
 	destroy_tree(tree->left);
 	destroy_tree(tree->right);
+	LSTdestroy(tree->interface_list, destroyItem);
 	free(tree);
 }
 
