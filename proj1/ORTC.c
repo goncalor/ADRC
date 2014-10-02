@@ -59,7 +59,7 @@ int main(int argc, char **argv)
 	/* check if first line of file has empty prefix */
 
 	fgets(line, LINE_LEN, fp);
-	if(sscanf(line, "* %hd", &empty_interf) != 1)	// no next hop defined for empty prefix. choose a value to signal that packets should be discarded
+	if(sscanf(line, "* %hdd", &empty_interf) != 1)	// no next hop defined for empty prefix. choose a value to signal that packets should be discarded
 	{
 		empty_interf = DISCARD_VAL;
 		rewind(fp);	// reprocess first line bellow
@@ -74,7 +74,7 @@ int main(int argc, char **argv)
 
 	while(fgets(line, LINE_LEN, fp)!=NULL)
 	{
-		if(sscanf(line, "%[01] %hd", prefix, &interf) != 2)
+		if(sscanf(line, "%[01] %hdd", prefix, &interf) != 2)
 		{
 			printf("Malformed line in '%s'\n\n", argv[1]);
 			exit(0);
@@ -152,13 +152,16 @@ short * makeItem(short interface)
 		puts("error allocating memory");
 		exit(-1);
 	}
+	
+	*temp = interface;
+	
 	return temp;
 }
 
 short getItem(list * node_interfaces)
 {	
 	if(node_interfaces == NULL)
-		return -1;
+		return DISCARD_VAL;
 	else
 		return *(short*)(node_interfaces->item);	
 }
@@ -184,9 +187,8 @@ node *create_node(void)
 		puts("ERROR: Unable to allocate memory.");
 		exit(-1);
 	}
-	#ifdef DEBUG
+
 	aux->interface_list = LSTadd(NULL, makeItem(DISCARD_VAL));
-	#endif
 	aux->right = aux->left = NULL;
 	return aux;
 }
@@ -195,7 +197,7 @@ void print_tree(node *tree)
 {
 	if(tree==NULL)
 		return;
-	printf("%d ", getItem(tree->interface_list));
+	printf("%hd ", getItem(tree->interface_list));
 	print_tree(tree->left);
 	print_tree(tree->right);
 }
@@ -235,7 +237,7 @@ list * percolate_2_nodes(list * nodeA_list, list * nodeB_list)
 		{
 			if(getItem(auxA) == getItem(auxB))
 			{
-				LSTadd(C, makeItem(getItem(auxA)));
+				C = LSTadd(C, makeItem(getItem(auxA)));
 			}
 			auxB = LSTfollowing(auxB);
 		}
@@ -249,12 +251,12 @@ list * percolate_2_nodes(list * nodeA_list, list * nodeB_list)
 	{
 		while (auxA != NULL)
 		{
-			LSTadd(C, makeItem(getItem(auxA)));
+			C = LSTadd(C, makeItem(getItem(auxA)));
 			auxA = LSTfollowing(auxA);
 		}
 		while (auxB != NULL)
 		{
-			LSTadd(C, makeItem(getItem(auxB)));
+			C = LSTadd(C, makeItem(getItem(auxB)));
 			auxB = LSTfollowing(auxB);
 		}
 	}
@@ -278,8 +280,10 @@ list * percolate_2_nodes(list * nodeA_list, list * nodeB_list)
 void percolate_tree(node * tree)
 {
 	if(tree == NULL)
+	{
 		return;
-		
+	}
+	
 	percolate_tree(tree->left);
 	percolate_tree(tree->right);
 
@@ -290,11 +294,9 @@ void percolate_tree(node * tree)
 		
 		#ifdef DEBUG 
 			list * aux = tree->interface_list;
-			if(aux == NULL)
-				puts("empty");
 			while(aux != NULL)
 			{
-				printf("%d ", getItem(aux));
+				printf("%hd ", getItem(aux));
 				aux = LSTfollowing(aux);
 			}
 			puts("\n");
