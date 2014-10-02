@@ -1,5 +1,5 @@
 compression: ORTC.o list.o
-	gcc ORTC.o factorial.o -o compression
+	gcc ORTC.o list.o -o compression
 
 ORTC.o: ORTC.c
 	gcc -c ORTC.c

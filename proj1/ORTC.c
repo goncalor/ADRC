@@ -19,7 +19,9 @@ typedef struct node{
 } node;
 
 short * makeItem(short interface);
-void destroyItem(short * interface_pointer);
+short getItem(list * interface);
+void changeItem(list * node_interfaces, short interface);
+void destroyItem(Item item);
 node *create_node(void);
 void print_tree(node *tree);
 void destroy_tree(node *tree);
@@ -66,7 +68,7 @@ int main(int argc, char **argv)
 
 	node *tree = create_node();
 
-	tree->interf = empty_interf;
+	changeItem(tree->interface_list, empty_interf);
 
 	while(fgets(line, LINE_LEN, fp)!=NULL)
 	{
@@ -85,19 +87,19 @@ int main(int argc, char **argv)
 				{
 					/* create leaf for balancing */
 					aux_node->right = create_node();
-					aux_node->right->interf = aux_node->interf;
+					changeItem(aux_node->right->interface_list, getItem(aux_node->interface_list));
 					/* create next node */
 					aux_node->left = create_node();
-					aux_node->left->interf = aux_node->interf;
+					changeItem(aux_node->left->interface_list, getItem(aux_node->interface_list));
 				}
 				else	// next node is on the right
 				{
 					/* create leaf for balancing */
 					aux_node->left = create_node();
-					aux_node->left->interf = aux_node->interf;
+					changeItem(aux_node->left->interface_list, getItem(aux_node->interface_list));
 					/* create next node */
 					aux_node->right = create_node();
-					aux_node->right->interf = aux_node->interf;
+					changeItem(aux_node->right->interface_list, getItem(aux_node->interface_list));
 				}
 			}
 
@@ -111,7 +113,7 @@ int main(int argc, char **argv)
 				aux_node = aux_node->right;	// go to next node
 			}
 		}
-		aux_node->interf = interf;	// place interface number in this leaf
+		changeItem(aux_node->interface_list, interf);	// place interface number in this leaf
 	}
 	
 	/* ORTC - step 1: discard interior next-hops ('-1' is a cleared node) */
@@ -161,14 +163,23 @@ short * makeItem(short interface)
 	return temp;
 }
 
-void destroyItem(short * interface_pointer)
+short getItem(list * node_interfaces)
+{	
+	return *(short*)(node_interfaces->item);	
+}
+
+void changeItem(list * node_interfaces, short interface)
 {
-	if (interface_pointer != NULL)
-		free(interface_pointer);
+	*(short*)(node_interfaces->item) = interface;
+} 
+
+void destroyItem(Item item)
+{
+	if (item != NULL)
+		free(item);
 	
 	return;
 }
-	 
 
 node *create_node(void)
 {
@@ -189,7 +200,7 @@ void print_tree(node *tree)
 {
 	if(tree==NULL)
 		return;
-	printf("%d ", tree->interf);
+	printf("%d ", getItem(tree->interface_list));
 	print_tree(tree->left);
 	print_tree(tree->right);
 }
@@ -208,7 +219,7 @@ void clear_interior_next_hops(node *tree)
 {
 	if(tree->left != NULL)
 	{
-		tree->interf = DISCARD_VAL;
+		changeItem(tree->interface_list, DISCARD_VAL);
 		
 		clear_interior_next_hops(tree->left);
 		clear_interior_next_hops(tree->right);	

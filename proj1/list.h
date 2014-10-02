@@ -3,12 +3,10 @@
 #ifndef _LIST_H
 #define _LIST_H
 
-/*struct list{
+typedef struct list{
 	Item item;
 	struct list *next;
-};*/
-
-typedef struct list list;
+} list;
 
 list *LSTinit(); /* initialises a list. returns pointer to that list */
 list *LSTadd(list *next, Item item); /* creates new element in list. returns pointer to new in list. NULL on memory allocation error */

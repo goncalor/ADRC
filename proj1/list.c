@@ -2,10 +2,6 @@
 #include "list.h"
 #include <stdlib.h>
 
-struct list{
-	Item item;
-	struct list *next;
-};
 
 /* initialises a list. returns pointer to that list */
 list *LSTinit()
