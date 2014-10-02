@@ -5,21 +5,25 @@
 
 #define ADDR_LEN	32	// address length in bits
 #define LINE_LEN	ADDR_LEN + 6	// 1 whitespace char, max 3 interface digits, \n\0
-#define DISCARD_VAL	UINT_MAX	// interface value for discarded packets
+#define DISCARD_VAL	-1	// interface value for discarded packets
 
 #define DEBUG
 
 
 typedef struct node{
+
 	unsigned branchfact : 5;	// max branching factor 2^31
 	unsigned skip : 7;	//	max skip is 127 (enough for IPv6)
 	unsigned pointer : 20;	//	enough for 2^20 entries in the FIB. 516k on 23/9/1014
-} node;
+
+/*	unsigned char branchfact, skip;
+	unsigned pointer;
+*/} node;
 
 typedef struct fib_entry{
 	unsigned prefix;
 //	char prefixlen;
-	unsigned nexthop;
+	short nexthop;
 } fib_entry;
 
 
@@ -92,7 +96,7 @@ unsigned short compute_skip(fib_entry *fib, unsigned short pre, unsigned first, 
 }
 
 /* returns the branch value possible for the n entries in fib starting at index first. ignores the first pre bits. */
-unsigned short compute_branch(fib_entry *fib, unsigned short pre, unsigned first, unsigned n)
+unsigned compute_branch(fib_entry *fib, unsigned short pre, unsigned first, unsigned n)
 {
 	short branch, m, found;
 	unsigned i;
@@ -124,9 +128,9 @@ unsigned short compute_branch(fib_entry *fib, unsigned short pre, unsigned first
 
 void build_trie(node *trie, fib_entry *fib, unsigned first, unsigned n, unsigned short pre, unsigned root_pos, unsigned *free_pos)
 {
-	short skip, branch;
+	unsigned short skip;
 	unsigned first_child;	// position of first child for this node (local root)
-	unsigned p, k, bitpat;
+	unsigned p, k, bitpat, branch;
 
 int i;
 for(i=0; i<n; i++)
@@ -142,6 +146,8 @@ puts("");
 
 	skip = compute_skip(fib, pre, first, n);
 	branch = compute_branch(fib, pre + skip, first, n);	// ???
+
+printf("%d\t %d", skip, branch);
 
 	first_child = *free_pos;
 	trie[root_pos].branchfact = branch;
@@ -165,6 +171,28 @@ puts("");
 }
 
 
+/* searches for address in trie and modifies nexthop to the value resulting from the search. returns 0 on success. on failure nexthop is not affected */
+int search_trie(node *trie, fib_entry *fib, unsigned address, short *nexthop)
+{
+	node node = trie[0];
+	unsigned short skip = node.skip;
+	unsigned branch = node.branchfact;
+	unsigned addr = node.pointer;
+
+	while(branch != 0)
+	{
+		node = trie[addr + extract(address, skip, branch)];
+		skip = skip + branch + node.skip;
+		branch = node.branchfact;
+		addr = node.pointer;
+	}
+
+	*nexthop = fib[addr].nexthop;
+
+	return addr;
+
+}
+
 
 /* -------- MAIN -------- */
 
@@ -184,12 +212,12 @@ int main(int argc, char **argv)
 	}
 
 	char line[LINE_LEN];
-	unsigned empty_nexthop=0;	// empty prefix interface
+	short empty_nexthop=0;	// empty prefix interface
 
 /* verify first line of file has empty prefix */
 
 	fgets(line, LINE_LEN, fp);
-	if(sscanf(line, "* %u", &empty_nexthop) != 1)	// no next hop defined for empty prefix. choose a value to signal that packets should be discarded
+	if(sscanf(line, "* %hd", &empty_nexthop) != 1)	// no next hop defined for empty prefix. choose a value to signal that packets should be discarded
 	{
 		empty_nexthop = DISCARD_VAL;
 		printf("First line of '%s' is not the empty prefix. Some packets may be discarded.\n", argv[1]);
@@ -200,7 +228,7 @@ int main(int argc, char **argv)
 	unsigned nrlines = 0;	// nr of lines in the FIB file
 	fib_entry *fib;
 	char prefix_str[ADDR_LEN+1];	// +1 for \0
-	unsigned /*prefix,*/ nexthop, i;
+	short nexthop = DISCARD_VAL, i;
 
 	while(!feof(fp))
 	{
@@ -212,9 +240,6 @@ int main(int argc, char **argv)
 	printf("the FIB has %d entries (excluding empty prefix)\n", nrlines);
 	#endif
 
-	fib = malloc(nrlines*sizeof(fib_entry));
-	memerr(fib);
-
 	rewind(fp);
 	if(empty_nexthop != DISCARD_VAL)	// BUG if empty nexthop is set to discard_val in the file
 	{
@@ -223,10 +248,13 @@ int main(int argc, char **argv)
 	else
 		nrlines++;	// the first line had a prefix which we did not count
 
+	fib = malloc(nrlines*sizeof(fib_entry));
+	memerr(fib);
+
 	i = 0;
 	while(fgets(line, LINE_LEN, fp) != NULL)
 	{
-		if(sscanf(line, "%[01] %u", prefix_str, &nexthop) != 2)
+		if(sscanf(line, "%[01] %hd", prefix_str, &nexthop) != 2)
 		{
 			printf("Malformed line in '%s'\n\n", argv[1]);
 			exit(0);
@@ -267,10 +295,16 @@ printf("skip: %hu\n", compute_skip(fib, 0, 0, nrlines));
 
 printf("branchfact: %hu\n", compute_branch(fib, 0, 0, nrlines));
 
-	node *trie = malloc(100*sizeof(node));	//	!!
+	node *tmp_trie = malloc(100*sizeof(node));	//	!!
+
 	unsigned free_pos = 1;	/* next free position in the trie. the trie root takes the first position */
 
-	build_trie(trie, fib, 0, nrlines, 0, 0, &free_pos);
+	build_trie(tmp_trie, fib, 0, nrlines, 0, 0, &free_pos);
+
+	node *trie = malloc(free_pos*sizeof(node));
+	for(i=0; i<free_pos; i++)
+		trie[i] = tmp_trie[i];
+	free(tmp_trie);
 
 puts("i\tbranch\tskip\tpointer");
 for(i=0; i<free_pos; i++)
@@ -282,12 +316,16 @@ for(i=0; i<free_pos; i++)
 	char address[ADDR_LEN+1];	// +1 for \0
 
 	printf("Address to look up: ");
-	fgets(line, LINE_LEN, stdin);
+	fgets(line, ADDR_LEN, stdin);
 
 	while(sscanf(line, "%[01]", address)==1)
 	{
 
+printf("search: %u\nreturn val: %d\n", binstrtoi_l(address), search_trie(trie, fib, binstrtoi_l(address), &nexthop));
+printf("nexthop: %d\n", nexthop);
 
+		printf("\nAddress to look up: ");
+		fgets(line, ADDR_LEN, stdin);
 	}
 
 
@@ -297,7 +335,8 @@ for(i=0; i<free_pos; i++)
 
 	puts("Bye.\n");
 
-
+	free(trie);
+	free(fib);
 	fclose(fp);
 	exit(0);
 }
