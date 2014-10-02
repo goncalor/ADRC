@@ -26,6 +26,8 @@ node *create_node(void);
 void print_tree(node *tree);
 void destroy_tree(node *tree);
 void clear_interior_next_hops(node *tree);
+list * percolate_2_nodes(list * nodeA_list, list * nodeB_list);
+void percolate_tree(node * tree);
 
 #ifdef DEBUG
 void print_tree(node *tree);
@@ -122,22 +124,12 @@ int main(int argc, char **argv)
 	
 	/* ORTC - step 2: calculate most frequent next-hops by traversing bottom up */
 	
-
-	/*A#B = { A e B se A e B != vazio
-			A com B se A e B = vazio }
-
-	A tem lista
-	B tem lista
-
-	cria lista temporária C
-
-	para cada elemento da lista de A, se tb estiver presente na lista B, adicionar à lista C
-	se nenhum elemento de A estiver presente em B, concatenar ambas em C
+	percolate_tree(tree);
 	
-	*/	
+	/* ORTC - step 3: */	
 
 	#ifdef DEBUG
-	printf("loaded tree (in-order traversal): ");
+	printf("loaded tree (pre-order traversal): ");
 	print_tree(tree);
 	puts("\n");
 	#endif
@@ -165,7 +157,10 @@ short * makeItem(short interface)
 
 short getItem(list * node_interfaces)
 {	
-	return *(short*)(node_interfaces->item);	
+	if(node_interfaces == NULL)
+		return -1;
+	else
+		return *(short*)(node_interfaces->item);	
 }
 
 void changeItem(list * node_interfaces, short interface)
@@ -205,7 +200,7 @@ void print_tree(node *tree)
 	print_tree(tree->right);
 }
 
-void destroy_tree(node *tree)
+void destroy_tree(node * tree)
 {
 	if(tree==NULL)
 		return;
@@ -226,3 +221,87 @@ void clear_interior_next_hops(node *tree)
 	}
 }
 
+list * percolate_2_nodes(list * nodeA_list, list * nodeB_list)
+{
+	list * C = NULL;
+	list * auxA = nodeA_list;
+	list * auxB = nodeB_list;
+	
+	/* fill list C if((A /\ B) != empty set)  */
+	while (auxA != NULL)
+	{
+		auxB = nodeB_list;
+		while(auxB != NULL)
+		{
+			if(getItem(auxA) == getItem(auxB))
+			{
+				LSTadd(C, makeItem(getItem(auxA)));
+			}
+			auxB = LSTfollowing(auxB);
+		}
+		auxA = LSTfollowing(auxA);
+	}
+	
+	auxA = nodeA_list;
+	auxB = nodeB_list;
+	
+	if(C == NULL)
+	{
+		while (auxA != NULL)
+		{
+			LSTadd(C, makeItem(getItem(auxA)));
+			auxA = LSTfollowing(auxA);
+		}
+		while (auxB != NULL)
+		{
+			LSTadd(C, makeItem(getItem(auxB)));
+			auxB = LSTfollowing(auxB);
+		}
+	}
+	
+	/*A#B = { A e B se A e B != vazio
+			A com B se A e B = vazio }
+
+	A tem lista
+	B tem lista
+
+	cria lista temporária C
+
+	para cada elemento da lista de A, se tb estiver presente na lista B, adicionar à lista C
+	se nenhum elemento de A estiver presente em B, concatenar ambas em C
+	
+	*/
+	
+	return C;
+}
+
+void percolate_tree(node * tree)
+{
+	if(tree == NULL)
+		return;
+		
+	percolate_tree(tree->left);
+	percolate_tree(tree->right);
+
+	if((tree->left != NULL) && (tree->right != NULL))
+	{
+		LSTdestroy(tree->interface_list, destroyItem);
+		tree->interface_list = percolate_2_nodes(tree->left->interface_list, tree->right->interface_list);
+		
+		#ifdef DEBUG 
+			list * aux = tree->interface_list;
+			if(aux == NULL)
+				puts("empty");
+			while(aux != NULL)
+			{
+				printf("%d ", getItem(aux));
+				aux = LSTfollowing(aux);
+			}
+			puts("\n");
+		#endif
+	}
+	
+	return;
+}	
+	
+	
