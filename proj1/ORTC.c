@@ -14,26 +14,20 @@
 #define DEBUG
 
 typedef struct node{
-	list * interface_list;
+	list * interface_list; // list of interfaces the associated with the node
 	struct node *right, *left;
 } node;
 
-short * makeItem(short interface);
-short getItem(list * interface);
-void changeItem(list * node_interfaces, short interface);
-void destroyItem(Item item);
-node *create_node(void);
-void print_tree(node *tree);
-void destroy_tree(node *tree);
-void clear_interior_next_hops(node *tree);
-list * percolate_2_nodes(list * nodeA_list, list * nodeB_list);
-void percolate_tree(node * tree);
-
-#ifdef DEBUG
-void print_tree(node *tree);
-#endif
-
-
+short * makeItem(short interface); // make an interface number into an Item type variable that can be passed to the listing functions 
+short getItem(list * interface); // get the value of an interface from a list entry of a node
+void changeItem(list * node_interfaces, short interface); // change the interface number on a list entry from a node
+void destroyItem(Item item); // free the memory used by the item
+node *create_node(void); // create a node for the tree
+void print_tree(node *tree); // print the whole tree in a pre-order traversal (only the first interface of each node is printed)
+void destroy_tree(node *tree); // free the memory for the whole tree
+void clear_interior_next_hops(node *tree); // clear the interfaces from interior nodes (not leafs) [step 1 of ORTC]
+list * percolate_2_nodes(list * nodeA_list, list * nodeB_list); // apply the percolation operation for a node [step 2 of ORTC]
+void percolate_tree(node * tree); // apply the percolation operation for the whole tree [step 2 of ORTC]
 
 int main(int argc, char **argv)
 {
@@ -118,7 +112,7 @@ int main(int argc, char **argv)
 		changeItem(aux_node->interface_list, interf);	// place interface number in this leaf
 	}
 	
-	/* ORTC - step 1: discard interior next-hops ('-1' is a cleared node) */
+	/* ORTC - step 1: discard interior next-hops */
 	
 	clear_interior_next_hops(tree);
 	
@@ -126,18 +120,22 @@ int main(int argc, char **argv)
 	
 	percolate_tree(tree);
 	
-	/* ORTC - step 3: */	
+	/* ORTC - step 3: */
+	
+	
+		
 
 	#ifdef DEBUG
 	printf("loaded tree (pre-order traversal): ");
 	print_tree(tree);
 	puts("\n");
-	#endif
-
-	puts("Bye.\n");
+	#endif	
 
 	destroy_tree(tree);
 	fclose(fp);
+	
+	puts("Bye.\n");
+	
 	exit(0);
 }
 
@@ -229,6 +227,19 @@ list * percolate_2_nodes(list * nodeA_list, list * nodeB_list)
 	list * auxA = nodeA_list;
 	list * auxB = nodeB_list;
 	
+	/* A#B = { A e B se A e B != vazio
+			  A com B se A e B = vazio }
+
+	A tem lista
+	B tem lista
+
+	cria lista temporária C
+
+	para cada elemento da lista de A, se tb estiver presente na lista B, adicionar à lista C
+	se nenhum elemento de A estiver presente em B, juntar ambas em C
+	
+	*/	
+	
 	/* fill list C if((A /\ B) != empty set)  */
 	while (auxA != NULL)
 	{
@@ -260,19 +271,6 @@ list * percolate_2_nodes(list * nodeA_list, list * nodeB_list)
 			auxB = LSTfollowing(auxB);
 		}
 	}
-	
-	/*A#B = { A e B se A e B != vazio
-			A com B se A e B = vazio }
-
-	A tem lista
-	B tem lista
-
-	cria lista temporária C
-
-	para cada elemento da lista de A, se tb estiver presente na lista B, adicionar à lista C
-	se nenhum elemento de A estiver presente em B, concatenar ambas em C
-	
-	*/
 	
 	return C;
 }
