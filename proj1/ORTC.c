@@ -126,7 +126,7 @@ int main(int argc, char **argv)
 	clean_redundancy(tree, NULL);
 
 	#ifdef DEBUG
-	printf("loaded tree (pre-order traversal): ");
+	printf("final tree (pre-order traversal): ");
 	print_tree(tree);
 	puts("\n");
 	#endif	
@@ -193,11 +193,13 @@ node *create_node(void)
 
 void print_tree(node *tree)
 {
-	if(tree==NULL)
+	if(tree==NULL)		
 		return;
-	printf("%hd ", getItem(tree->interface_list));
+	
+	printf("%hd\n", getItem(tree->interface_list));
 	print_tree(tree->left);
 	print_tree(tree->right);
+	puts("back up");
 }
 
 void destroy_tree(node * tree)
@@ -322,9 +324,10 @@ void clean_redundancy(node * tree, list * ancestor_interfaces)
 	short match_found = 0;
 	
 	/* see if there are matching interfaces between current node and ancestor */
-	while(aux_self != NULL && match_found == 0)
+	while(aux_ancestor != NULL && match_found == 0)	
 	{
-		while(aux_ancestor != NULL && match_found == 0)
+		aux_self = tree->interface_list;
+		while(aux_self != NULL && match_found == 0)
 		{
 			if(getItem(aux_self) == getItem(aux_ancestor)) // match found, delete current node interfaces to avoid redundancy 
 			{
@@ -332,9 +335,9 @@ void clean_redundancy(node * tree, list * ancestor_interfaces)
 				tree->interface_list = NULL; 
 				match_found = 1;
 			}
-			aux_ancestor = LSTfollowing(aux_ancestor);
-		}
-		aux_self = LSTfollowing(aux_self);		
+			aux_self = LSTfollowing(aux_self);
+		}		
+		aux_ancestor = LSTfollowing(aux_ancestor);		
 	}
 	
 	/* no matches found, choose a random interface from the node (first is fine, no need for actual random choice) */
