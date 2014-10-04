@@ -28,6 +28,7 @@ void destroy_tree(node *tree); // free the memory for the whole tree
 void clear_interior_next_hops(node *tree); // clear the interfaces from interior nodes (not leafs) [step 1 of ORTC]
 list * percolate_2_nodes(list * nodeA_list, list * nodeB_list); // apply the percolation operation for a node [step 2 of ORTC]
 void percolate_tree(node * tree); // apply the percolation operation for the whole tree [step 2 of ORTC]
+void clean_redundancy(node * tree, list * ancestor_interfaces); // cleans redundancy in the tree [step 3 of ORTC]
 
 int main(int argc, char **argv)
 {
@@ -122,8 +123,7 @@ int main(int argc, char **argv)
 	
 	/* ORTC - step 3: */
 	
-	
-		
+	clean_redundancy(tree, NULL);
 
 	#ifdef DEBUG
 	printf("loaded tree (pre-order traversal): ");
@@ -227,20 +227,20 @@ list * percolate_2_nodes(list * nodeA_list, list * nodeB_list)
 	list * auxA = nodeA_list;
 	list * auxB = nodeB_list;
 	
-	/* A#B = { A e B se A e B != vazio
-			  A com B se A e B = vazio }
+	/* A#B = { intersection(A, B) if intersection(A, B) != empty set
+			  junction(A, B) if intersection(A, B) = empty set }	
+	
+	A has interface list
+	B has interface list
 
-	A tem lista
-	B tem lista
+	create temporary list C
 
-	cria lista temporária C
-
-	para cada elemento da lista de A, se tb estiver presente na lista B, adicionar à lista C
-	se nenhum elemento de A estiver presente em B, juntar ambas em C
+	for each element from A's list, if it is present on B's list add it to list C
+	if no element from A's list exists on B's list, add both lists to C
 	
 	*/	
 	
-	/* fill list C if((A /\ B) != empty set)  */
+	/* fill list C if intersection(A, B) != empty set)  */
 	while (auxA != NULL)
 	{
 		auxB = nodeB_list;
@@ -258,6 +258,7 @@ list * percolate_2_nodes(list * nodeA_list, list * nodeB_list)
 	auxA = nodeA_list;
 	auxB = nodeB_list;
 	
+	/* if there were no matching elements from A's list and B's list, add both to C */
 	if(C == NULL)
 	{
 		while (auxA != NULL)
@@ -302,6 +303,60 @@ void percolate_tree(node * tree)
 	}
 	
 	return;
+}
+
+void clean_redundancy(node * tree, list * ancestor_interfaces)
+{
+	if(tree == NULL)
+		return;
+	
+	
+	/* For each child, if it has a matching interface with it's parent, 
+	   delete it's own list and tell it's own children 
+	   (keep a memory of the last ancestor that didn't delete it's own list) */
+	
+/* do stuff to itself ( ͡° ͜ʖ ͡°) */
+	list * aux_self = tree->interface_list;
+	list * aux_ancestor = ancestor_interfaces;
+	list * temp = NULL;
+	short match_found = 0;
+	
+	/* see if there are matching interfaces between current node and ancestor */
+	while(aux_self != NULL && match_found == 0)
+	{
+		while(aux_ancestor != NULL && match_found == 0)
+		{
+			if(getItem(aux_self) == getItem(aux_ancestor)) // match found, delete current node interfaces to avoid redundancy 
+			{
+				LSTdestroy(tree->interface_list, destroyItem);
+				tree->interface_list = NULL; 
+				match_found = 1;
+			}
+			aux_ancestor = LSTfollowing(aux_ancestor);
+		}
+		aux_self = LSTfollowing(aux_self);		
+	}
+	
+	/* no matches found, choose a random interface from the node (first is fine, no need for actual random choice) */
+	if(match_found == 0)
+	{
+		temp = LSTadd(NULL, makeItem(getItem(tree->interface_list)));
+		LSTdestroy(tree->interface_list, destroyItem);
+		tree->interface_list = temp;		
+	}
+	
+/* do stuff to it's children ( ͡° ͜ʖ ͡°) */
+	if(match_found == 1)
+	{
+		clean_redundancy(tree->left, ancestor_interfaces);
+		clean_redundancy(tree->right, ancestor_interfaces);
+	}
+	else
+	{
+		clean_redundancy(tree->left, tree->interface_list);
+		clean_redundancy(tree->right, tree->interface_list);
+	}
 }	
+
 	
 	
