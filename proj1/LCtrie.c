@@ -8,7 +8,7 @@
 #define DISCARD_VAL	-1	// interface value for discarded packets
 
 #define DEBUG
-
+#define DEBUGL2
 
 typedef struct node{
 
@@ -22,7 +22,7 @@ typedef struct node{
 
 typedef struct fib_entry{
 	unsigned prefix;
-//	char prefixlen;
+	char prefixlen;
 	short nexthop;
 } fib_entry;
 
@@ -82,9 +82,6 @@ unsigned short compute_skip(fib_entry *fib, unsigned short pre, unsigned first, 
 	unsigned first_pre, last_pre;	// first and last prefixes in the interval
 	short p;
 
-/*	first_cle = clear_pre(fib[first].prefix, pre);
-	last_cle = clear_pre(fib[first+n-1].prefix, pre);*/
-
 	first_pre = fib[first].prefix;
 	last_pre = fib[first+n-1].prefix;
 
@@ -132,10 +129,12 @@ void build_trie(node *trie, fib_entry *fib, unsigned first, unsigned n, unsigned
 	unsigned first_child;	// position of first child for this node (local root)
 	unsigned p, k, bitpat, branch;
 
-int i;
-for(i=0; i<n; i++)
-	printf("%u\n", fib[first+i].prefix);
-puts("");
+	#ifdef DEBUGL2
+	int i;
+	for(i=0; i<n; i++)
+		printf("%u\n", fib[first+i].prefix);
+	puts("");
+	#endif
 
 	if(n == 1)
 	{
@@ -145,9 +144,7 @@ puts("");
 	}
 
 	skip = compute_skip(fib, pre, first, n);
-	branch = compute_branch(fib, pre + skip, first, n);	// ???
-
-printf("%d\t %d", skip, branch);
+	branch = compute_branch(fib, pre + skip, first, n);
 
 	first_child = *free_pos;
 	trie[root_pos].branchfact = branch;
@@ -160,18 +157,17 @@ printf("%d\t %d", skip, branch);
 	for(bitpat=0; bitpat<(1<<branch); bitpat++)
 	{
 		k=0;
-		while(extract(fib[p + k].prefix, pre + skip, branch) == bitpat)
+		while(p+k < first+n && extract(fib[p + k].prefix, pre + skip, branch) == bitpat)
 			k++;
 
-		build_trie(trie, fib, p, k, pre + skip + branch/**/, first_child + bitpat, free_pos);
+		build_trie(trie, fib, p, k, pre + skip + branch, first_child + bitpat, free_pos);
 
 		p += k;
-
 	}
 }
 
 
-/* searches for address in trie and modifies nexthop to the value resulting from the search. returns 0 on success. on failure nexthop is not affected */
+/* searches for address in trie and modifies nexthop to the value resulting from the search. returns nonzero on success. on failure nexthop is not affected */
 int search_trie(node *trie, fib_entry *fib, unsigned address, short *nexthop)
 {
 	node node = trie[0];
@@ -187,10 +183,13 @@ int search_trie(node *trie, fib_entry *fib, unsigned address, short *nexthop)
 		addr = node.pointer;
 	}
 
-	*nexthop = fib[addr].nexthop;
-
-	return addr;
-
+	if(extract(address ^ fib[addr].prefix, 0, fib[addr].prefixlen) == 0)	// found it
+	{
+		*nexthop = fib[addr].nexthop;
+		return 1;
+	}
+	else
+		return 0;
 }
 
 
@@ -236,10 +235,6 @@ int main(int argc, char **argv)
 			nrlines++;
 	}
 
-	#ifdef DEBUG
-	printf("the FIB has %d entries (excluding empty prefix)\n", nrlines);
-	#endif
-
 	rewind(fp);
 	if(empty_nexthop != DISCARD_VAL)	// BUG if empty nexthop is set to discard_val in the file
 	{
@@ -247,6 +242,10 @@ int main(int argc, char **argv)
 	}
 	else
 		nrlines++;	// the first line had a prefix which we did not count
+
+	#ifdef DEBUG
+	printf("the FIB has %d entries (excluding empty prefix)\n", nrlines);
+	#endif
 
 	fib = malloc(nrlines*sizeof(fib_entry));
 	memerr(fib);
@@ -256,32 +255,34 @@ int main(int argc, char **argv)
 	{
 		if(sscanf(line, "%[01] %hd", prefix_str, &nexthop) != 2)
 		{
-			printf("Malformed line in '%s'\n\n", argv[1]);
+			printf("Malformed line in '%s'.\n\n", argv[1]);
 			exit(0);
 		}
 
 		fib[i].prefix = binstrtoi_l(prefix_str);
-//		fib[i].prefixlen = strlen(prefix_str);
+		fib[i].prefixlen = strlen(prefix_str);
 		fib[i].nexthop = nexthop;
 		i++;
 	}
 
 	#ifdef DEBUG
-	puts("pref\t\tnexthop");
+	puts("\npref\t\tpreflen\tnexthop");
 	for(i=0; i<10 && i < nrlines; i++)
-		printf("%u\t%d\n", fib[i].prefix, fib[i].nexthop);
-	puts("...");
+		printf("%u\t%d\t%d\n", fib[i].prefix, fib[i].prefixlen, fib[i].nexthop);
+	puts("...\n");
 	#endif
 
 /* sort the FIB by prefix */
 
+	printf("Now sorting the FIB... ");
 	qsort(fib, nrlines, sizeof(fib_entry), (cmpfn)fib_prefix_cmp);
+	puts("Done.");
 
 	#ifdef DEBUG
-	puts("pref\t\tnexthop");
+	puts("\npref\t\tpreflen\tnexthop");
 	for(i=0; i<10 && i< nrlines; i++)
-		printf("%u\t%d\n", fib[i].prefix, fib[i].nexthop);
-	puts("...");
+		printf("%u\t%d\t%d\n", fib[i].prefix, fib[i].prefixlen, fib[i].nexthop);
+	puts("...\n");
 	#endif
 
 /* load data from the FIB and create a LC trie */
@@ -290,25 +291,23 @@ int main(int argc, char **argv)
 	printf("each node takes %ld Bytes to store\n\n", sizeof(node));
 	#endif
 
-
-printf("skip: %hu\n", compute_skip(fib, 0, 0, nrlines));
-
-printf("branchfact: %hu\n", compute_branch(fib, 0, 0, nrlines));
-
 	node *tmp_trie = malloc(100*sizeof(node));	//	!!
-
 	unsigned free_pos = 1;	/* next free position in the trie. the trie root takes the first position */
 
 	build_trie(tmp_trie, fib, 0, nrlines, 0, 0, &free_pos);
+
+/* paste the trie into a vector with the correct size */
 
 	node *trie = malloc(free_pos*sizeof(node));
 	for(i=0; i<free_pos; i++)
 		trie[i] = tmp_trie[i];
 	free(tmp_trie);
 
-puts("i\tbranch\tskip\tpointer");
-for(i=0; i<free_pos; i++)
-	printf("%d\t%d\t%d\t%d\t\n", i, trie[i].branchfact, trie[i].skip, trie[i].pointer);
+	#ifdef DEBUG
+	puts("i\tbranch\tskip\tpointer");
+	for(i=0; i<free_pos; i++)
+		printf("%d\t%d\t%d\t%d\t\n", i, trie[i].branchfact, trie[i].skip, trie[i].pointer);
+	#endif
 
 /* prompt for address and search trie */
 	puts("To exit just press Enter.\n");
@@ -320,17 +319,23 @@ for(i=0; i<free_pos; i++)
 
 	while(sscanf(line, "%[01]", address)==1)
 	{
+		#ifdef DEBUG
+		printf("search: %u\nreturn val: %d\n", binstrtoi_l(address), search_trie(trie, fib, binstrtoi_l(address), &nexthop));
+		printf("nexthop: %d\n", nexthop);
+		#endif
 
-printf("search: %u\nreturn val: %d\n", binstrtoi_l(address), search_trie(trie, fib, binstrtoi_l(address), &nexthop));
-printf("nexthop: %d\n", nexthop);
+		if(search_trie(trie, fib, binstrtoi_l(address), &nexthop) != 0)	// found it
+		{
+			printf("Forward to interface %hd.\n", nexthop);
+		}
+		else
+		{
+			puts("Discard packet.");
+		}
 
 		printf("\nAddress to look up: ");
 		fgets(line, ADDR_LEN, stdin);
 	}
-
-
-
-
 
 
 	puts("Bye.\n");
