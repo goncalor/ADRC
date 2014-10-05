@@ -330,7 +330,10 @@ int main(int argc, char **argv)
 		}
 		else
 		{
-			puts("Discard packet.");
+			if(empty_nexthop == DISCARD_VAL)
+				puts("Discard packet.");
+			else
+				printf("Forward to interface %hd.\n", empty_nexthop);
 		}
 
 		printf("\nAddress to look up: ");
