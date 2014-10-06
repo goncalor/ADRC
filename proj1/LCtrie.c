@@ -2,13 +2,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
+#include "list.h"
 
 #define ADDR_LEN	32	// address length in bits
 #define LINE_LEN	ADDR_LEN + 6	// 1 whitespace char, max 3 interface digits, \n\0
 #define DISCARD_VAL	-1	// interface value for discarded packets
 
 #define DEBUG
-#define DEBUGL2
+//#define DEBUGL2
 
 typedef struct node{
 
@@ -193,6 +194,78 @@ int search_trie(node *trie, fib_entry *fib, unsigned address, short *nexthop)
 }
 
 
+/* searches for a prefix in a fib ordered by prefix. searches only from index first to index nrlines */
+int fib_search(fib_entry *fib, unsigned prefix_index, unsigned first, unsigned nrlines)
+{
+	unsigned aux;
+
+	do
+	{
+		aux = first + (nrlines - first)/2;	/* (nrlines - first)/2 might overflow */
+
+		if(fib[prefix_index].prefix == fib[aux].prefix)
+			return 1;
+		else if(fib[prefix_index].prefix > fib[aux].prefix)
+			first = aux+1;
+		else
+			nrlines = aux-1;
+	}
+	while(nrlines >= first);
+
+	return 0;
+}
+
+
+void fib_transform(fib_entry *fib, unsigned *nrlines)
+{
+	unsigned i, k, nrlines_todel=0;
+	unsigned *aux_prefix;
+	list *first = LSTinit(), *last;
+
+	last = first;
+	for(i=0; i < *nrlines-1; i++)
+	{
+		if(fib[i].prefix == fib[i+1].prefix)
+		{
+			fib[i].prefix |= 1<<(sizeof(unsigned)*8-fib[i].prefixlen-1);
+			fib[i].prefixlen ++;
+
+			/* if a prefix equal to this new prefix is found store its index */
+			if(fib_search(fib, i, i+1, *nrlines-1))
+			{
+				nrlines_todel++;
+				aux_prefix = malloc(sizeof(*aux_prefix));
+				*aux_prefix = i;
+				if(last == NULL)
+				{
+					first = last = LSTadd(NULL, aux_prefix);
+				}
+				else
+				{
+					LSTeditfollowing(last, LSTadd(NULL, aux_prefix));
+				}
+			}
+		}
+	}
+
+	last = first;
+	for(i=0, k=0; i+k < *nrlines; i++)
+	{
+		if(last!= NULL && i == *((unsigned*) LSTgetitem(last)))
+		{
+			k++;
+			last = LSTfollowing(last);
+		}
+
+		fib[i] = fib[i+k];
+	}
+
+	LSTdestroy(first, free);
+
+	*nrlines -= nrlines_todel;
+}
+
+
 /* -------- MAIN -------- */
 
 int main(int argc, char **argv)
@@ -284,6 +357,13 @@ int main(int argc, char **argv)
 		printf("%u\t%d\t%d\n", fib[i].prefix, fib[i].prefixlen, fib[i].nexthop);
 	puts("...\n");
 	#endif
+
+/* transform inner nodes into leafs. sort again */
+
+	printf("Transforming inner nodes into leafs... ");
+	fib_transform(fib, &nrlines);
+	qsort(fib, nrlines, sizeof(fib_entry), (cmpfn)fib_prefix_cmp);
+	puts("Done.");
 
 /* load data from the FIB and create a LC trie */
 
