@@ -216,17 +216,27 @@ int fib_search(fib_entry *fib, unsigned prefix_index, unsigned first, unsigned n
 }
 
 
+/* tranforms the fib so that inner nodes in the trie are transformed into new leaves */
 void fib_transform(fib_entry *fib, unsigned *nrlines)
 {
 	unsigned i, k, nrlines_todel=0;
 	unsigned *aux_prefix;
 	list *first = LSTinit(), *last;
+	fib_entry aux_entry;
 
 	last = first;
 	for(i=0; i < *nrlines-1; i++)
 	{
 		if(fib[i].prefix == fib[i+1].prefix)
 		{
+			if(fib[i].prefixlen > fib[i+1].prefixlen)
+			{
+				/* reorder these two entries so that the one with the shortest prefix comes first*/
+				aux_entry = fib[i];
+				fib[i] = fib[i+1];
+				fib[i+1] = aux_entry;
+			}
+
 			fib[i].prefix |= 1<<(sizeof(unsigned)*8-fib[i].prefixlen-1);
 			fib[i].prefixlen ++;
 
@@ -301,6 +311,7 @@ int main(int argc, char **argv)
 	fib_entry *fib;
 	char prefix_str[ADDR_LEN+1];	// +1 for \0
 	short nexthop = DISCARD_VAL, i;
+	unsigned prefixlen_sum=0;
 
 	while(!feof(fp))
 	{
@@ -335,6 +346,7 @@ int main(int argc, char **argv)
 		fib[i].prefix = binstrtoi_l(prefix_str);
 		fib[i].prefixlen = strlen(prefix_str);
 		fib[i].nexthop = nexthop;
+		prefixlen_sum += fib[i].prefixlen;
 		i++;
 	}
 
@@ -368,10 +380,11 @@ int main(int argc, char **argv)
 /* load data from the FIB and create a LC trie */
 
 	#ifdef DEBUG
-	printf("each node takes %ld Bytes to store\n\n", sizeof(node));
+	printf("each node takes %ld Bytes to store\n", sizeof(node));
+	printf("tmp_trie is %u nodes long\n\n", prefixlen_sum);
 	#endif
 
-	node *tmp_trie = malloc(100*sizeof(node));	//	!!
+	node *tmp_trie = malloc(prefixlen_sum*sizeof(node));
 	unsigned free_pos = 1;	/* next free position in the trie. the trie root takes the first position */
 
 	build_trie(tmp_trie, fib, 0, nrlines, 0, 0, &free_pos);
