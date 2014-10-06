@@ -3,10 +3,7 @@
 #ifndef _LIST_H
 #define _LIST_H
 
-typedef struct list{
-	Item item;
-	struct list *next;
-} list;
+typedef struct list list;
 
 /* initialises a list. returns pointer to that list */
 list *LSTinit();
