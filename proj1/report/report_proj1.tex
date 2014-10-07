@@ -1,4 +1,4 @@
-\documentclass[10pt,a4paper]{report}
+\documentclass[10pt,a4paper]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[portuguese]{babel}
 \usepackage[T1]{fontenc}
@@ -10,5 +10,11 @@
 \title{Pesquisa e Compressão de Tabelas de Encaminhamento}
 \begin{document}
 \maketitle
+\section{Pesquisa da Tabela de Encaminhamento}
+À data de escrita deste relatório existem cerca de 520K prefixos nas tabelas BGP (Border Gateway Protocol) da Internet. Como tal é essencial que os algoritmos de procura implementados pelos routers sejam muito eficientes para que os datagramas possam ser encaminhados em tempo útil. Nesta parte do relatório damos conta de uma implementação que fizemos de dois algoritmos de procura em tabelas de expedição (FIB).
+
+O primeiro algoritmo que implementámos organiza os prefixos numa trie binária em que todos os nós excepto as folhas têm sempre dois filhos, uma 2-trie. O prefixo é codificado no caminho desde a raiz até uma folha e cada folha tem o próximo salto correspondente ao prefixo. Desta forma o algoritmo de pesquisa é simples:
+
+\section{Compressão da Tabela de Encaminhamento}
 
 \end{document}
