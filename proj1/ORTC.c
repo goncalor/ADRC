@@ -392,13 +392,22 @@ void printToFile(node * tree, FILE * destination_file)
 			fprintf(destination_file, "*\t%hd\n", *(short*)LSTgetitem(tree->interface_list));			
 		}
 		else 
-		{				
+		{	/* ugly hacks here to change LIFO to FIFO */
+			list * queue_fix_head = NULL;
+			list * queue_fix = NULL;			
 			while(queue_aux != NULL) // not root, print the prefix (path taken) of the next-hop
 			{
-				fprintf(destination_file, "%hd", *(short*)LSTgetitem(queue_aux)); // this will print the prefix in reverse order, list library update is recommended to allow FIFO as well as the current LIFO implementation
+				queue_fix = LSTadd(queue_fix, makeItem(*(short*)LSTgetitem(queue_aux)));				 
 				queue_aux = LSTfollowing(queue_aux);
 			}
-			
+			queue_fix_head = queue_fix;
+			while(queue_fix != NULL) // not root, print the prefix (path taken) of the next-hop
+			{
+				fprintf(destination_file, "%hd", *(short*)LSTgetitem(queue_fix));			 
+				queue_fix = LSTfollowing(queue_fix);
+			}
+
+			LSTdestroy(queue_fix_head, destroyItem);
 			fprintf(destination_file, "\t%hd\n", *(short*)LSTgetitem(tree->interface_list)); // print the next-hop itself and change line
 		}
 	}
