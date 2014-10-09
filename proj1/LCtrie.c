@@ -313,6 +313,7 @@ int main(int argc, char **argv)
 	short nexthop = DISCARD_VAL, i;
 	unsigned prefixlen_sum=0;
 
+	printf("Loading the FIB...");
 	while(!feof(fp))
 	{
 		if(fgetc(fp) == '\n')
@@ -350,6 +351,7 @@ int main(int argc, char **argv)
 		i++;
 	}
 
+	puts("Done");
 	#ifdef DEBUG
 	puts("\npref\t\tpreflen\tnexthop");
 	for(i=0; i<10 && i < nrlines; i++)
