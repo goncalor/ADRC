@@ -29,6 +29,9 @@ void clear_interior_next_hops(node *tree); // clear the interfaces from interior
 list * percolate_2_nodes(list * nodeA_list, list * nodeB_list); // apply the percolation operation for a node [step 2 of ORTC]
 void percolate_tree(node * tree); // apply the percolation operation for the whole tree [step 2 of ORTC]
 void clean_redundancy(node * tree, list * ancestor_interfaces); // cleans redundancy in the tree [step 3 of ORTC]
+void printToFile(node * tree, FILE * destination_file); // prints the resulting tree to a forwarding list file
+
+list * queue = NULL;
 
 int main(int argc, char **argv)
 {
@@ -124,7 +127,21 @@ int main(int argc, char **argv)
 	/* ORTC - step 3: */
 	
 	clean_redundancy(tree, NULL);
-
+	
+	
+	/* print to file */
+	
+	char destination[128];
+	sprintf(destination, "%s.compressed", argv[1]);	
+	FILE * destination_file = fopen(destination, "w");
+	if(fp == NULL)
+	{
+		printf("Unable to open '%s'\n\n", argv[1]);
+		exit(-1);
+	}	
+	
+	printToFile(tree, destination_file);
+	
 	#ifdef DEBUG
 	printf("final tree (pre-order traversal): ");
 	print_tree(tree);
@@ -132,7 +149,9 @@ int main(int argc, char **argv)
 	#endif	
 
 	destroy_tree(tree);
+	LSTdestroy(queue, destroyItem);
 	fclose(fp);
+	fclose(destination_file);
 	
 	puts("Bye.\n");
 	
@@ -161,12 +180,12 @@ short getItem(list * node_interfaces)
 	if(node_interfaces == NULL)
 		return DISCARD_VAL;
 	else
-		return *(short*)(node_interfaces->item);	
+		return *(short*)LSTgetitem(node_interfaces);	
 }
 
 void changeItem(list * node_interfaces, short interface)
 {
-	*(short*)(node_interfaces->item) = interface;
+	*(short*)LSTgetitem(node_interfaces) = interface;
 } 
 
 void destroyItem(Item item)
@@ -317,7 +336,7 @@ void clean_redundancy(node * tree, list * ancestor_interfaces)
 	   delete it's own list and tell it's own children 
 	   (keep a memory of the last ancestor that didn't delete it's own list) */
 	
-/* do stuff to itself ( ͡° ͜ʖ ͡°) */
+
 	list * aux_self = tree->interface_list;
 	list * aux_ancestor = ancestor_interfaces;
 	list * temp = NULL;
@@ -348,7 +367,7 @@ void clean_redundancy(node * tree, list * ancestor_interfaces)
 		tree->interface_list = temp;		
 	}
 	
-/* do stuff to it's children ( ͡° ͜ʖ ͡°) */
+
 	if(match_found == 1)
 	{
 		clean_redundancy(tree->left, ancestor_interfaces);
@@ -359,7 +378,48 @@ void clean_redundancy(node * tree, list * ancestor_interfaces)
 		clean_redundancy(tree->left, tree->interface_list);
 		clean_redundancy(tree->right, tree->interface_list);
 	}
-}	
+}
+
+void printToFile(node * tree, FILE * destination_file)
+{
+	list * queue_aux = queue;	
+	
+	if (getItem(tree->interface_list) != -1) // if this node has a next-hop, write it to the file
+	{
+		queue_aux = queue;
+		if(queue_aux == NULL) // still at root node, print '*' to simbolize default next-hop
+		{	
+			fprintf(destination_file, "*\t%hd\n", *(short*)LSTgetitem(tree->interface_list));			
+		}
+		else 
+		{				
+			while(queue_aux != NULL) // not root, print the prefix (path taken) of the next-hop
+			{
+				fprintf(destination_file, "%hd", *(short*)LSTgetitem(queue_aux)); // this will print the prefix in reverse order, list library update is recommended to allow FIFO as well as the current LIFO implementation
+				queue_aux = LSTfollowing(queue_aux);
+			}
+			
+			fprintf(destination_file, "\t%hd\n", *(short*)LSTgetitem(tree->interface_list)); // print the next-hop itself and change line
+		}
+	}
+	
+	// do the same for the rest of the tree
+	if(tree->left != NULL)
+	{
+		queue = LSTadd(queue, makeItem(0)); 
+		printToFile(tree->left, destination_file);
+	}
+	if(tree->right != NULL)
+	{
+		queue = LSTadd(queue, makeItem(1));
+		printToFile(tree->right, destination_file);		
+	}
+	
+	// going back up, remove the last entered bit of the prefix
+	queue = LSTremove(NULL, queue, destroyItem); 
+}
+
+	
 
 	
 	
