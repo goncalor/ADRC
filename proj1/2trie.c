@@ -7,7 +7,7 @@
 #define LINE_LEN	ADDR_LEN + 6	// 1 whitespace char, max 3 interface digits, \n\0
 #define DISCARD_VAL	-1	// interface value for discarded packets
 
-#define DEBUG
+//#define DEBUG
 
 typedef struct node{
 	short interf;	// interface
@@ -86,6 +86,7 @@ int main(int argc, char **argv)
 
 /* load data from the forwarding table and create a balanced tree */
 
+	printf("Building trie... ");
 	node *tree = create_node();
 
 	tree->interf = empty_interf;
@@ -136,6 +137,7 @@ int main(int argc, char **argv)
 		aux_node->interf = interf;	// place interface number in this leaf
 	}
 
+	puts("Done.\n");
 	#ifdef DEBUG
 	printf("loaded tree: ");
 	print_tree(tree);
@@ -172,6 +174,7 @@ int main(int argc, char **argv)
 			else	// reached a leaf. see interface
 			{
 				interf = aux_node->interf;
+				break;
 			}
 
 		}
