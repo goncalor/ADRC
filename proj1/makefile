@@ -18,7 +18,6 @@ ORTC.o: ORTC.c
 	$(CC) $(CFLAGS) -c ORTC.c
 
 # LCtrie
-
 LCtrie: LCtrie.o list.o
 	$(CC) $(CFLAGS) $^ -o $@
 
