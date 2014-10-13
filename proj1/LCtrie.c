@@ -310,7 +310,8 @@ int main(int argc, char **argv)
 	unsigned nrlines = 0;	// nr of lines in the FIB file
 	fib_entry *fib;
 	char prefix_str[ADDR_LEN+1];	// +1 for \0
-	short nexthop = DISCARD_VAL, i;
+	short nexthop = DISCARD_VAL;
+	int i;
 	unsigned prefixlen_sum=0;
 
 	printf("Loading the FIB...");
@@ -381,6 +382,7 @@ int main(int argc, char **argv)
 
 /* load data from the FIB and create a LC trie */
 
+	printf("Builing LC-trie... ");
 	#ifdef DEBUG
 	printf("each node takes %ld Bytes to store\n", sizeof(node));
 	printf("tmp_trie is %u nodes long\n\n", prefixlen_sum);
@@ -390,6 +392,7 @@ int main(int argc, char **argv)
 	unsigned free_pos = 1;	/* next free position in the trie. the trie root takes the first position */
 
 	build_trie(tmp_trie, fib, 0, nrlines, 0, 0, &free_pos);
+	puts("Done.");
 
 /* paste the trie into a vector with the correct size */
 
