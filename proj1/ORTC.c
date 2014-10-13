@@ -11,13 +11,15 @@
 
 
 
-#define DEBUG
+//#define DEBUG
 
 typedef struct node{
 	list * interface_list; // list of interfaces the associated with the node
 	struct node *right, *left;
 } node;
 
+
+node * loadToTree(FILE * fp, char **argv);
 short * makeItem(short interface); // make an interface number into an Item type variable that can be passed to the listing functions 
 short getItem(list * interface); // get the value of an interface from a list entry of a node
 void changeItem(list * node_interfaces, short interface); // change the interface number on a list entry from a node
@@ -47,6 +49,55 @@ int main(int argc, char **argv)
 		printf("Unable to open '%s'\n\n", argv[1]);
 		exit(-1);
 	}
+
+	/* load the list file to a binary tree data structure */
+
+	node * tree = loadToTree(fp, argv);
+
+	/* ORTC - step 1: discard interior next-hops */
+	
+	clear_interior_next_hops(tree);
+	
+	/* ORTC - step 2: calculate most frequent next-hops by traversing bottom up */
+	
+	percolate_tree(tree);
+	
+	/* ORTC - step 3: */
+	
+	clean_redundancy(tree, NULL);
+	
+	
+	/* print to file */
+	
+	char destination[128];
+	sprintf(destination, "%s.compressed", argv[1]);	
+	FILE * destination_file = fopen(destination, "w");
+	if(fp == NULL)
+	{
+		printf("Unable to open '%s'\n\n", argv[1]);
+		exit(-1);
+	}	
+	
+	printToFile(tree, destination_file);
+	
+	#ifdef DEBUG
+	printf("final tree (pre-order traversal): ");
+	print_tree(tree);
+	puts("\n");
+	#endif	
+
+	destroy_tree(tree);
+	LSTdestroy(queue, destroyItem);
+	fclose(fp);
+	fclose(destination_file);
+	
+	puts("done.\n");
+	
+	exit(0);
+}
+
+node * loadToTree(FILE * fp, char **argv)
+{
 
 	char line[LINE_LEN];
 	char prefix[ADDR_LEN+1];	// +1 for \0
@@ -115,50 +166,8 @@ int main(int argc, char **argv)
 		}
 		changeItem(aux_node->interface_list, interf);	// place interface number in this leaf
 	}
-	
-	/* ORTC - step 1: discard interior next-hops */
-	
-	clear_interior_next_hops(tree);
-	
-	/* ORTC - step 2: calculate most frequent next-hops by traversing bottom up */
-	
-	percolate_tree(tree);
-	
-	/* ORTC - step 3: */
-	
-	clean_redundancy(tree, NULL);
-	
-	
-	/* print to file */
-	
-	char destination[128];
-	sprintf(destination, "%s.compressed", argv[1]);	
-	FILE * destination_file = fopen(destination, "w");
-	if(fp == NULL)
-	{
-		printf("Unable to open '%s'\n\n", argv[1]);
-		exit(-1);
-	}	
-	
-	printToFile(tree, destination_file);
-	
-	#ifdef DEBUG
-	printf("final tree (pre-order traversal): ");
-	print_tree(tree);
-	puts("\n");
-	#endif	
-
-	destroy_tree(tree);
-	LSTdestroy(queue, destroyItem);
-	fclose(fp);
-	fclose(destination_file);
-	
-	puts("Bye.\n");
-	
-	exit(0);
+	return tree;
 }
-
-
 
 short * makeItem(short interface)
 {
