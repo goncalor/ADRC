@@ -107,8 +107,68 @@ O algoritmo de procura na trie é o Algoritmo~\ref{algo:LCtrie_search}. A funç�
 \end{algorithm}
 
 \section{Compressão da Tabela de Encaminhamento}
+	Para permitir pesquisas mais rápidas implementámos também um algoritmo de compressão de tabelas de encaminhamento, o Optimal Routing Table Constructor (ORTC) desenvolvido pela Microsoft. Este algoritmo produz tabelas de encaminhamento óptimas no sentido de não ser possível as comprimir mais (prova no Paper referenciado na bibliografia) e permite em média diminuir em 40\% o tamanho de uma tabela.
+	O ORTC comprime as tabelas eliminando redundância e trocando o next-hop geral pelo next-hop mais comum e fazendo as alterações necessárias para manter o funcionamento da tabela. O algoritmo tem três passos gerais: 
+	
+	1. Normalizar a àrvore certificando-se de que cada nó tem 0 ou 2 filhos, propagando next-hops para os filhos quando necessário. Os next-hops de nós intermédios são agora redundantes e podem ser descartados.   
+	
+	2. Calcular qual o next-hop mais utilizado, este passo é feito em pós-ordem uma vez que se quer percorrer a àrvore das folhas para a raíz, chegando à raiz com o next-hop mais frequente calculado.
+	
+	3. Percorrer a àrvore da raíz até às folhas eliminando as folhas com informação redundante (next-hop já indicado pelo antepassado mais próximo que tem um next-hop).
+	
+	O ORTC tem complexidade $O(n)$ uma vez que a àrvore é percorrida três vezes, uma em cada passo. Providenciamos pseudo-código para cada passo nos Algoritmos 3, 4 e 5.
+	
+\begin{algorithm}
+\label{algo:ORTC_step1}
+\ForEach{ node N, root to leaves }
+{
+	\uIf{ N has exactly one child node }
+	{
+		create missing child node
+	}
+	\uIf{ Next-hops(N) == 0 }
+	{
+		Next-hops(N) = Inherited(N)	
+	}
+}
+\caption{passo 1 do algoritmo ORTC}
+\end{algorithm}
 
+\begin{algorithm}
+\label{algo:ORTC_step2}
+\ForEach{ node N, leaves to root }
+{
+	\uIf{ N's children have a next-hop in common }
+	{
+		Next-hops(N) = Common(Next-hops(N->left), Next-hops(N->right))
+	}
+	\uElse
+	{
+		Next-hops(N) = Next-hops(N->left) joined with Next-hops(N->left) 	
+	}
+}
+\caption{passo 2 do algoritmo ORTC}
+\end{algorithm}
+
+
+\begin{algorithm}
+\label{algo:ORTC_step3}
+\ForEach{ node N, root to leaves }
+{
+	\uIf{ N is not the root and Inherited(N) is contained in Next-hops(N) }
+	{
+		Next-hops(N) = empty-set
+	}
+	\uElse
+	{
+		Next-hops(N) = First(Next-hops(N)	
+	}
+}
+\caption{passo 3 do algoritmo ORTC}
+\end{algorithm}
+	
 	\bibliographystyle{plain}
 	\bibliography{SNilsson99}
+	\bibliography{http://research.microsoft.com/pubs/69698/tr-98-59.pdf}
 
 \end{document}
