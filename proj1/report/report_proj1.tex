@@ -55,11 +55,11 @@
 
 	O segundo algoritmo implementa uma trie com compressão de nível (\mbox{LC-trie}) e caminho (Patricia tree). A ideia é criar uma trie em que as zonas densas --- i níveis completos consecutivos --- são substituídas por um nó com grau $2^i$; e em que as zonas esparsas são comprimidas removendo nós com apenas um filho. Isto resulta numa árvore menos alta e portanto em pesquisas mais rápidas. Esta implementação teve por base \cite{SNilsson99}.
 
-Na implementação deste algoritmo é necessário em memória a FIB ordenada por prefixo e uma representação da trie. A trie é implementada como um vector e cada nó tem três campos: branch, skip e pointer. Branch refere-se ao grau do nó; skip ao número de nós suprimidos pela compressão de caminho; pointer à posição no vector do filho mais à esquerda ou, em folhas, ao nexthop.
+Na implementação deste algoritmo é necessário em memória a FIB ordenada por prefixo e uma representação da trie. A trie é implementada como um vector e cada nó tem três campos: branch, skip e pointer. Branch refere-se ao grau do nó; skip ao número de nós suprimidos pela compressão de caminho; pointer à posição no vector do filho mais à esquerda ou, em folhas, à posição da FIB em que pode ser encontrado o nexthop.
 
 A parte mais pesada do algoritmo é a construção da trie. Para calcular o branch de cada nó é preciso varrer os $k$ sufixos do nó actual. Por outro lado o skip de cada nó é $O(1)$ porque basta comparar o primeiro e o último dos $k$ sufixos. Para saber mais detalhes sobre a construção da trie recomendamos a consulta da nossa implementação ou \cite{SNilsson99}.
 
-O algoritmo de procura na trie é simples (Algoritmo~\ref{algo:LCtrie_search}). A função extract(a, p, n) retorna $n$ bits de $a$ começando no bit $p$, sendo que p=0 se refere ao bit mais significativo de $a$. Note-se que devido à perda de informação introduzida pela compressão de caminho é preciso sempre verificar na FIB se a folha encontrada corresponde a um prefixo compatível com o endereço que está a ser procurado. Segundo \cite{SNilsson99} para uma FIB com $n$ entradas a altura da \mbox{LC-trie} cresce com $O(log \, log \, n)$ enquanto que numa árvore sem compressão cresce com $O(log \, n)$. Portanto este algoritmo permite pesquisas mais rápidas.
+O algoritmo de procura na trie é o Algoritmo~\ref{algo:LCtrie_search}. A função extract(a, p, n) retorna $n$ bits de $a$ começando no bit $p$, sendo que p=0 se refere ao bit mais significativo de $a$. Note-se que devido à perda de informação introduzida pela compressão de caminho é preciso sempre verificar na FIB se a folha encontrada corresponde a um prefixo compatível com o endereço que está a ser procurado. Segundo \cite{SNilsson99} para uma FIB com $n$ entradas a altura da \mbox{LC-trie} cresce com $O(log \, log \, n)$ enquanto que numa árvore sem compressão cresce com $O(log \, n)$. Portanto este algoritmo permite pesquisas mais rápidas.
 
 \begin{algorithm}
 	\label{algo:LCtrie_search}
@@ -68,7 +68,7 @@ O algoritmo de procura na trie é simples (Algoritmo~\ref{algo:LCtrie_search}). 
 	skip = node.skip \\
 	branch = node.branch \\
 	pointer = node.pointer \\
-	\While{ branch != 0 }
+	\While{ node is not a leaf }
 	{
 		node = trie[addr + extract(address, skip, branch)] \\
 		skip = skip + branch + node.skip \\
@@ -84,7 +84,6 @@ O algoritmo de procura na trie é simples (Algoritmo~\ref{algo:LCtrie_search}). 
 	{
 		return DISCARD\_PACKET
 	}
-
 		\begin{comment}
 			node = trie[0]
 			skip = node.skip
