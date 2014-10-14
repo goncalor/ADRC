@@ -8,7 +8,7 @@
 #define LINE_LEN	ADDR_LEN + 6	// 1 whitespace char, max 3 interface digits, \n\0
 #define DISCARD_VAL	-1	// interface value for discarded packets
 
-#define DEBUG
+//#define DEBUG
 //#define DEBUGL2
 
 typedef struct node{
@@ -201,7 +201,7 @@ int fib_search(fib_entry *fib, unsigned prefix_index, unsigned first, unsigned n
 
 	do
 	{
-		aux = first + (nrlines - first)/2;	/* (nrlines - first)/2 might overflow */
+		aux = first + (nrlines - first)/2;	// (nrlines - first)/2 might overflow
 
 		if(fib[prefix_index].prefix == fib[aux].prefix)
 			return 1;
@@ -216,32 +216,23 @@ int fib_search(fib_entry *fib, unsigned prefix_index, unsigned first, unsigned n
 }
 
 
-/* tranforms the fib so that inner nodes in the trie are transformed into new leaves */
+/* tranforms the ordered fib so that inner nodes in the trie are transformed into new leaves */
 void fib_transform(fib_entry *fib, unsigned *nrlines)
 {
 	unsigned i, k, nrlines_todel=0;
 	unsigned *aux_prefix;
 	list *first = LSTinit(), *last;
-	fib_entry aux_entry;
 
 	last = first;
 	for(i=0; i < *nrlines-1; i++)
 	{
-		if(fib[i].prefix == fib[i+1].prefix)
+		if(fib[i].prefix == fib[i+1].prefix)	/* left exists */
 		{
-			if(fib[i].prefixlen > fib[i+1].prefixlen)
-			{
-				/* reorder these two entries so that the one with the shortest prefix comes first*/
-				aux_entry = fib[i];
-				fib[i] = fib[i+1];
-				fib[i+1] = aux_entry;
-			}
-
 			fib[i].prefix |= 1<<(sizeof(unsigned)*8-fib[i].prefixlen-1);
 			fib[i].prefixlen ++;
 
 			/* if a prefix equal to this new prefix is found store its index */
-			if(fib_search(fib, i, i+1, *nrlines-1))
+			if(fib_search(fib, i, i+1, *nrlines-1))	/* right exists */
 			{
 				nrlines_todel++;
 				aux_prefix = malloc(sizeof(*aux_prefix));
@@ -252,22 +243,23 @@ void fib_transform(fib_entry *fib, unsigned *nrlines)
 				}
 				else
 				{
-					LSTeditfollowing(last, LSTadd(NULL, aux_prefix));
+					last = LSTeditfollowing(last, LSTadd(NULL, aux_prefix));
 				}
 			}
 		}
 	}
 
 	last = first;
-	for(i=0, k=0; i+k < *nrlines; i++)
+	for(i=0, k=0; i < *nrlines; i++)
 	{
 		if(last!= NULL && i == *((unsigned*) LSTgetitem(last)))
 		{
 			k++;
 			last = LSTfollowing(last);
+			continue;
 		}
 
-		fib[i] = fib[i+k];
+		fib[i-k] = fib[i];
 	}
 
 	LSTdestroy(first, free);
