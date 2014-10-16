@@ -4,7 +4,7 @@ import sys
 newfileext = "_ed.txt"
 nr_interfaces = 64
 
-print "Usage: python " + sys.argv[0] + " <fib_files>"
+print "Usage: python " + sys.argv[0] + " <fib_files>\n"
 
 for i in range(1, len(sys.argv)):
 	filename = sys.argv[i]

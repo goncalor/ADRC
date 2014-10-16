@@ -14,7 +14,7 @@
 \begin{document}
 \maketitle
 \section{Pesquisa da Tabela de Encaminhamento}
-	À data de escrita deste relatório existem cerca de 520K prefixos nas tabelas BGP (Border Gateway Protocol) da Internet. Como tal é essencial que os algoritmos de procura implementados pelos routers sejam muito eficientes para que os datagramas possam ser encaminhados em tempo útil. Nesta parte do relatório damos conta de uma implementação que fizemos de dois algoritmos de procura em tabelas de expedição (FIB).
+	À data de escrita deste relatório existem cerca de 520K prefixos nas tabelas BGP (Border Gateway Protocol) da Internet. Como tal é essencial que os algoritmos de encaminhamento implementados pelos routers sejam muito eficientes para que os datagramas possam ser encaminhados em tempo útil. Nesta parte do relatório damos conta de uma implementação que fizemos de dois algoritmos de procura em tabelas de expedição (FIB).
 
 	O primeiro algoritmo que implementámos organiza os prefixos numa trie binária em que todos os nós excepto as folhas têm sempre dois filhos, uma \mbox{2-trie}. O prefixo é codificado no caminho desde a raiz até uma folha e cada folha tem o próximo salto correspondente ao prefixo. Desta forma o algoritmo de pesquisa é simples (Algoritmo~\ref{algo:2trie_search}).
 
@@ -53,13 +53,13 @@
 	\caption{pesquisa de um endereço numa 2-trie}
 \end{algorithm}
 
-	O segundo algoritmo implementa uma trie com compressão de nível (\mbox{LC-trie}) e caminho (Patricia tree). A ideia é criar uma trie em que as zonas densas --- i níveis completos consecutivos --- são substituídas por um nó com grau $2^i$; e em que as zonas esparsas são comprimidas removendo nós com apenas um filho. Isto resulta numa árvore menos alta e portanto em pesquisas mais rápidas. Esta implementação teve por base \cite{SNilsson99}.
+	O segundo algoritmo implementa uma trie com compressão de nível (\mbox{LC-trie}) e caminho (Patricia tree). O objectivo é criar uma trie em que as zonas densas --- i níveis completos consecutivos --- são substituídas por um nó com grau $2^i$; e em que as zonas esparsas são comprimidas removendo nós com apenas um filho. Isto resulta numa árvore menos alta e portanto em pesquisas mais rápidas. Esta implementação teve por base \cite{SNilsson99}.
 
-Na implementação deste algoritmo é necessário em memória a FIB ordenada por prefixo e uma representação da trie. A trie é implementada como um vector e cada nó tem três campos: branch, skip e pointer. Branch refere-se ao grau do nó; skip ao número de nós suprimidos pela compressão de caminho; pointer à posição no vector do filho mais à esquerda ou, em folhas, à posição da FIB em que pode ser encontrado o nexthop.
+Na implementação deste algoritmo é necessário ter em memória a FIB ordenada por prefixo e uma representação da trie. A trie é implementada como um vector e cada nó tem três campos: branch, skip e pointer. Branch refere-se ao grau do nó; skip ao número de nós suprimidos pela compressão de caminho; pointer à posição no vector do filho mais à esquerda ou, em folhas, à posição da FIB em que pode ser encontrado o nexthop.
 
 A parte mais pesada do algoritmo é a construção da trie. Para calcular o branch de cada nó é preciso varrer os $k$ sufixos do nó actual. Por outro lado o skip de cada nó é $O(1)$ porque basta comparar o primeiro e o último dos $k$ sufixos. Para saber mais detalhes sobre a construção da trie recomendamos a consulta da nossa implementação ou \cite{SNilsson99}.
 
-O algoritmo de procura na trie é o Algoritmo~\ref{algo:LCtrie_search}. A função extract(a, p, n) retorna $n$ bits de $a$ começando no bit $p$, sendo que p=0 se refere ao bit mais significativo de $a$. Note-se que devido à perda de informação introduzida pela compressão de caminho é preciso sempre verificar na FIB se a folha encontrada corresponde a um prefixo compatível com o endereço que está a ser procurado. Segundo \cite{SNilsson99} para uma FIB com $n$ entradas a altura da \mbox{LC-trie} cresce com $O(log \, log \, n)$ enquanto que numa árvore sem compressão cresce com $O(log \, n)$. Portanto este algoritmo permite pesquisas mais rápidas.
+O correspondente algoritmo de pesquisa na trie é o Algoritmo~\ref{algo:LCtrie_search}. A função extract(a, p, n) retorna $n$ bits de $a$ começando no bit $p$, sendo que p=0 se refere ao bit mais significativo de $a$. Note-se que devido à perda de informação introduzida pela compressão de caminho é preciso sempre verificar na FIB se a folha encontrada corresponde a um prefixo compatível com o endereço que está a ser procurado. Segundo \cite{SNilsson99} para uma FIB com $n$ entradas a altura da \mbox{LC-trie} cresce com $O(log \, log \, n)$ enquanto que numa árvore sem compressão cresce com $O(log \, n)$. Portanto este algoritmo permite pesquisas mais rápidas.
 
 \begin{algorithm}
 	\label{algo:LCtrie_search}
@@ -107,7 +107,7 @@ O algoritmo de procura na trie é o Algoritmo~\ref{algo:LCtrie_search}. A funç�
 \end{algorithm}
 
 \section{Compressão da Tabela de Encaminhamento}
-	Para permitir pesquisas mais rápidas implementámos também um algoritmo de compressão de tabelas de encaminhamento, o Optimal Routing Table Constructor (ORTC) desenvolvido pela Microsoft. Este algoritmo produz tabelas de encaminhamento óptimas no sentido de não ser possível as comprimir mais (prova no Paper referenciado na bibliografia) e permite em média diminuir em 40\% o tamanho de uma tabela.
+	Para permitir pesquisas mais rápidas implementámos também um algoritmo de compressão de tabelas de encaminhamento, o Optimal Routing Table Constructor (ORTC) desenvolvido pela Microsoft \cite{DravesKSZ99}. Este algoritmo produz tabelas de encaminhamento óptimas no sentido de não ser possível as comprimir mais (prova no Paper referenciado na bibliografia) e permite em média diminuir em 40\% o tamanho de uma tabela.
 	O ORTC comprime as tabelas eliminando redundância e trocando o next-hop geral pelo next-hop mais comum e fazendo as alterações necessárias para manter o funcionamento da tabela. O algoritmo tem três passos gerais: 
 	
 	1. Normalizar a àrvore certificando-se de que cada nó tem 0 ou 2 filhos, propagando next-hops para os filhos quando necessário. Os next-hops de nós intermédios são agora redundantes e podem ser descartados.   
@@ -166,9 +166,8 @@ O algoritmo de procura na trie é o Algoritmo~\ref{algo:LCtrie_search}. A funç�
 }
 \caption{passo 3 do algoritmo ORTC}
 \end{algorithm}
-	
-	\bibliographystyle{plain}
-	\bibliography{SNilsson99}
-	\bibliography{DravesKSZ99}
+
+\bibliographystyle{plain}
+\bibliography{SNilsson99,DravesKSZ99}	% no whitespace between commas!
 
 \end{document}
