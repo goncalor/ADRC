@@ -9,6 +9,11 @@
 \usepackage[portuguese]{algorithm2e}
 \usepackage{comment}
 \usepackage{hyperref}
+
+\makeatletter	% let the hacks begin
+\newcommand{\nosemic}{\renewcommand{\@endalgocfline}{\relax}}	% Drop semi-colon ;
+\makeatother
+
 \author{Gonçalo Ribeiro e Ricardo Amendoeira}
 \title{Pesquisa e Compressão de Tabelas de Encaminhamento}
 \begin{document}
@@ -55,7 +60,7 @@
 
 	O segundo algoritmo implementa uma trie com compressão de nível (\mbox{LC-trie}) e caminho (Patricia tree). O objectivo é criar uma trie em que as zonas densas --- i níveis completos consecutivos --- são substituídas por um nó com grau $2^i$; e em que as zonas esparsas são comprimidas removendo nós com apenas um filho. Isto resulta numa árvore menos alta e portanto em pesquisas mais rápidas. Esta implementação teve por base \cite{SNilsson99}.
 
-Na implementação deste algoritmo é necessário ter em memória a FIB ordenada por prefixo e uma representação da trie. A trie é implementada como um vector e cada nó tem três campos: branch, skip e pointer. Branch refere-se ao grau do nó; skip ao número de nós suprimidos pela compressão de caminho; pointer à posição no vector do filho mais à esquerda ou, em folhas, à posição da FIB em que pode ser encontrado o nexthop.
+Na implementação deste algoritmo é necessário ter em memória a FIB ordenada por prefixo e uma representação da trie. A trie é implementada como um vector e cada nó tem três campos: branch, skip e pointer. Branch refere-se ao grau do nó; skip ao número de nós suprimidos pela compressão de caminho; pointer à posição no vector do filho mais à esquerda ou, em folhas, à posição da FIB em que pode ser encontrado o next-hop.
 
 A parte mais pesada do algoritmo é a construção da trie. Para calcular o branch de cada nó é preciso varrer os $k$ sufixos do nó actual. Por outro lado o skip de cada nó é $O(1)$ porque basta comparar o primeiro e o último dos $k$ sufixos. Para saber mais detalhes sobre a construção da trie recomendamos a consulta da nossa implementação ou \cite{SNilsson99}.
 
@@ -63,26 +68,26 @@ O correspondente algoritmo de pesquisa na trie é o Algoritmo~\ref{algo:LCtrie_s
 
 \begin{algorithm}
 	\label{algo:LCtrie_search}
-
-	node = trie[0] \\
-	skip = node.skip \\
-	branch = node.branch \\
-	pointer = node.pointer \\
+	\nosemic
+	node = trie[0] \;
+	skip = node.skip \;
+	branch = node.branch \;
+	pointer = node.pointer \;
 	\While{ node is not a leaf }
 	{
-		node = trie[addr + extract(address, skip, branch)] \\
-		skip = skip + branch + node.skip \\
-		branch = node.branch \\
-		pointer = node.pointer \\
+		node = trie[addr + extract(address, skip, branch)] \;
+		skip = skip + branch + node.skip \;
+		branch = node.branch \;
+		pointer = node.pointer \;
 	}
 	
 	\uIf{ address starts with fib[pointer].prefix }
 	{
-		return fib[pointer].nexthop
+		return fib[pointer].nexthop \;
 	}
 	\Else
 	{
-		return DISCARD\_PACKET
+		return DISCARD\_PACKET \;
 	}
 		\begin{comment}
 			node = trie[0]
@@ -107,28 +112,32 @@ O correspondente algoritmo de pesquisa na trie é o Algoritmo~\ref{algo:LCtrie_s
 \end{algorithm}
 
 \section{Compressão da Tabela de Encaminhamento}
-	Para permitir pesquisas mais rápidas implementámos também um algoritmo de compressão de tabelas de encaminhamento, o Optimal Routing Table Constructor (ORTC) desenvolvido pela Microsoft \cite{DravesKSZ99}. Este algoritmo produz tabelas de encaminhamento óptimas no sentido de não ser possível as comprimir mais (prova no segundo artigo referenciado na bibliografia) e permite em média diminuir em 40\% o tamanho de uma tabela.
-	O ORTC comprime as tabelas eliminando redundância e trocando o next-hop geral pelo next-hop mais comum, fazendo depois as alterações necessárias para manter o funcionamento da tabela. O algoritmo tem três passos gerais: 
+	Para permitir pesquisas mais rápidas implementámos também um algoritmo de compressão de tabelas de encaminhamento, o Optimal Routing Table Constructor (ORTC) desenvolvido pela Microsoft \cite{DravesKSZ99}. Este algoritmo produz tabelas de encaminhamento óptimas no sentido de não ser possível comprimi-las mais (ver demonstração em \cite{DravesKSZ99}) e permite em média diminuir em 40\% o tamanho de uma tabela.
+	O ORTC comprime as tabelas eliminando redundância e trocando o next-hop geral pelo next-hop mais comum, fazendo depois as alterações necessárias para manter o funcionamento da tabela. O algoritmo tem três passos: 
+
+\begin{enumerate}
+	\item	Percorrer a árvore da raiz até às folhas transformando-a numa \mbox{2-trie}, para isso propagando next-hops para os filhos quando necessário. Os next-hops de nós intermédios passam a ser redundantes e podem ser descartados;
+
+	\item	Percorrer a árvore das folhas até à raiz para calcular qual o next-hop mais utilizado. Cada nó calcula o next-hop mais comum da sua própria sub-árvore uma vez que se explora a árvore em pós-ordem;
+
+	\item	Percorrer a árvore da raiz até às folhas eliminando as folhas com informação redundante (folhas com next-hops já indicados pelos seus antepassados).
+
+\end{enumerate}
 	
-	1. Percorrer a àrvore da raíz até às folhas a normalizar a àrvore (certificando-se de que cada nó tem 0 ou 2 filhos), propagando next-hops para os filhos quando necessário. Os next-hops de nós intermédios passam a ser redundantes e podem ser descartados.   
-	
-	2. Percorrer a àrvore das folhas até à raiz para calcular qual o next-hop mais utilizado. Cada nó calcula o next-hop mais comum da sua própria sub-àrvore uma vez que se explora a àrvore em pós-ordem.
-	
-	3. Percorrer a àrvore da raíz até às folhas eliminando as folhas com informação redundante (next-hop de N já indicado pelo antepassado mais próximo de N que tem um next-hop).
-	
-	O ORTC tem complexidade $O(n)$ uma vez que a àrvore é percorrida três vezes, uma em cada passo. Providenciamos pseudo-código para cada passo nos Algoritmos 3, 4 e 5.
+	O ORTC tem complexidade $O(n)$ uma vez que a árvore é percorrida três vezes, uma em cada passo. Providenciamos pseudo-código para cada passo nos Algoritmos~\ref{algo:ORTC_step1}, \ref{algo:ORTC_step2} e \ref{algo:ORTC_step3}.
 	
 \begin{algorithm}
 \label{algo:ORTC_step1}
-\ForEach{ node N, root to leaves }
+\nosemic
+\ForEach{ node N, from root to leaves }
 {
 	\uIf{ N has exactly one child node }
 	{
-		create missing child node
+		create missing child node \;
 	}
 	\uIf{ Next-hops(N) == 0 }
 	{
-		Next-hops(N) = Inherited(N)	
+		Next-hops(N) = Inherited(N) \;
 	}
 }
 \caption{passo 1 do algoritmo ORTC}
@@ -136,32 +145,35 @@ O correspondente algoritmo de pesquisa na trie é o Algoritmo~\ref{algo:LCtrie_s
 
 \begin{algorithm}
 \label{algo:ORTC_step2}
-\ForEach{ node N, leaves to root }
+\nosemic
+\ForEach{ node N, from leaves to root }
 {
 	\uIf{ N's children have a next-hop in common }
 	{
-		Next-hops(N) = Common(Next-hops(N->left), Next-hops(N->right))
+		Next-hops(N) = \;
+			\Indp	Common(Next-hops(N->left),Next-hops(N->right)) \;
 	}
 	\uElse
 	{
-		Next-hops(N) = Next-hops(N->left) joined with Next-hops(N->left) 	
+		Next-hops(N) = \;
+			\Indp	Next-hops(N->left) joined with Next-hops(N->left) \;
 	}
 }
 \caption{passo 2 do algoritmo ORTC}
 \end{algorithm}
 
-
 \begin{algorithm}
 \label{algo:ORTC_step3}
-\ForEach{ node N, root to leaves }
+\nosemic
+\ForEach{ node N, from root to leaves }
 {
-	\uIf{ N is not the root and Inherited(N) is contained in Next-hops(N) }
+	\uIf{ N is not the root and Inherited(N) is in Next-hops(N) }
 	{
-		Next-hops(N) = empty-set
+		Next-hops(N) = empty-set \;
 	}
 	\uElse
 	{
-		Next-hops(N) = First(Next-hops(N)	
+		Next-hops(N) = First(Next-hops(N)) \;
 	}
 }
 \caption{passo 3 do algoritmo ORTC}
