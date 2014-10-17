@@ -374,7 +374,7 @@ int main(int argc, char **argv)
 
 /* load data from the FIB and create a LC trie */
 
-	printf("Builing LC-trie... ");
+	printf("Building LC-trie... ");
 	#ifdef DEBUG
 	printf("each node takes %ld Bytes to store\n", sizeof(node));
 	printf("tmp_trie is %u nodes long\n\n", prefixlen_sum);
