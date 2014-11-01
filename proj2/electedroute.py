@@ -16,7 +16,7 @@ def loadgraph():
 	filename = sys.argv[1]
 	try:
 		f = open(filename, 'r')
-	except:
+	except IOError:
 		print "Failed to open '" + filename + "'."
 		exit()
 
@@ -36,7 +36,22 @@ def loadgraph():
 
 	f.close()	# close the file
 
+def prompt():
+	""" prompts user to provide an origin and a destination """
+	orig = raw_input("Origin: ")
+	dest = raw_input("Destination: ")
+
+	if not orig.isdigit() or not dest.isdigit():
+		print "Invalid input. Need integers."
+		exit()
+
+	orig = int(orig)
+	dest = int(dest)
+	return (orig, dest)
+
 
 check_args()
 loadgraph()
 #pprint.pprint(graph)
+orig, dest = prompt()
+
