@@ -70,34 +70,45 @@ def prompt():
 
 
 def findroutes(orig, dest, path, prev, prev_rel):
+	""" finds routes from orig to dest and saves them in a global
+		variable routes. prev is the previous node used to reach
+		orig. path is the path until prev. prev_rel is the relation
+		between prev and orig from orig's point of view """
 	global routes
 
 	if prev != None:
 		# check if incoming edge has been used previously
+		# if so, add routes if needed and return
 		tmp = graph[orig][{1:3,2:2,3:1}[prev_rel]]	# translate prev_rel to match this node's point of view
-		if [prev, True] in tmp:	# edge has been used
+		if [prev, True] in tmp:	# incoming edge has been used
+			# check if a route has been found using this node. if so add a new route that includes the incoming path + the route from this node to dest
+			routes_aux = list(routes)
+			for i, route in enumerate(routes_aux):
+				for j, val in enumerate(route):
+					if val == orig:
+						routes.append(path + route[j:])
+						break	# all done with this route
+						print routes
 			return
-
-		# mark the incoming edge as used
-		tmp[tmp.index([prev, False])][1] = True
 
 	# add current node to path
 	path.extend([orig])
 	#print path
 
 	# check if this node is the destination and if it was reached via a peer
-	if orig == dest and prev_rel != 2:
+	if orig == dest:
 		routes.append(path)	# add path to routes
 		return
 
 	if prev_rel == 3 or prev_rel == 2:	# this node is either a costumer of prev or a peer of prev. use only costumers
 		explore = [3]
 	elif prev_rel == 1: # this node is a provider of prev. explore any node
-		explore = [3, 2, 1]	# the order is important. explore costumers first
+		explore = [3, 2, 1]	# the order is important. explore costumers first. prevents loops
 
 	for relation in explore:
-		for (node, used) in graph[orig][relation]:
+		for i, (node, used) in enumerate(graph[orig][relation]):
 			if used == False:	#unused edge
+				graph[orig][relation][i][1] = True	# mark outgoing edge as used
 				findroutes(node, dest, list(path), orig, relation)
 
 
@@ -124,8 +135,9 @@ def electroute():
 	ordered_routes = [y for (x,y) in sorted(zip(str_routes, routes))]
 	#print sorted(str_routes)
 	#print ordered_routes
+	if not ordered_routes:	# list is empty
+		return None
 	return ordered_routes[0]
-
 
 check_args()
 loadgraph()
@@ -138,4 +150,5 @@ while True:
 	#print routes
 	print "The elected route is " + str(electroute())
 	#print "The elected route is " + '-'.join(map(str, electroute()))
+	#pprint.pprint(graph)
 	initgraph()
