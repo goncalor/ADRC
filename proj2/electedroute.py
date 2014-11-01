@@ -37,13 +37,25 @@ def loadgraph():
 	f.close()	# close the file
 
 
+def initgraph():
+	""" resets all edges to unused state """
+	global graph
+	for nodeedges in graph.values():
+		for edges in nodeedges.values():
+			for edge in edges:
+				edge[1] = False
+
+
 def prompt():
 	""" prompts user to provide an origin and a destination """
-	orig = raw_input("Origin: ")
+	orig = raw_input("\nOrigin: ")
 	dest = raw_input("Destination: ")
 
 	if not orig.isdigit() or not dest.isdigit():
-		print "Invalid input. Need integers."
+		if orig == dest == '':
+			print "You chose to quit. Bye."
+		else:
+			print "Invalid input. Need integers."
 		exit()
 
 	orig = int(orig)
@@ -86,7 +98,10 @@ def electroute(orig, dest, path, prev, prev_rel):
 check_args()
 loadgraph()
 #pprint.pprint(graph)
-orig, dest = prompt()
-elected = []
-electroute(orig, dest, [], None, 1)
-print elected
+print "Press Return twice to exit."
+while True:
+	orig, dest = prompt()
+	elected = []
+	electroute(orig, dest, [], None, 1)
+	print elected
+	initgraph()
