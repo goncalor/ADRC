@@ -60,11 +60,17 @@ def prompt():
 
 	orig = int(orig)
 	dest = int(dest)
+	if orig not in graph:
+		print "No node " + str(orig) + " in graph."
+		exit()
+	elif dest not in graph:
+		print "No node " + str(dest) + " in graph."
+		exit()
 	return (orig, dest)
 
 
-def electroute(orig, dest, path, prev, prev_rel):
-	global elected
+def findroutes(orig, dest, path, prev, prev_rel):
+	global routes
 
 	if prev != None:
 		# check if incoming edge has been used previously
@@ -81,7 +87,7 @@ def electroute(orig, dest, path, prev, prev_rel):
 
 	# check if this node is the destination and if it was reached via a peer
 	if orig == dest and prev_rel != 2:
-		elected.append(path)	# add path to elected
+		routes.append(path)	# add path to routes
 		return
 
 	if prev_rel == 3 or prev_rel == 2:	# this node is either a costumer of prev or a peer of prev. use only costumers
@@ -92,7 +98,33 @@ def electroute(orig, dest, path, prev, prev_rel):
 	for relation in explore:
 		for (node, used) in graph[orig][relation]:
 			if used == False:	#unused edge
-				electroute(node, dest, list(path), orig, relation)
+				findroutes(node, dest, list(path), orig, relation)
+
+
+def neighbour_rel(node, tosearch):
+	""" finds the relation node has to tosearch """
+	for relation, neighbours in graph[node].items():
+		for neighbour in neighbours:
+			if neighbour[0] == tosearch:
+				return relation
+	return None
+
+
+def electroute():
+	""" finds the elected route from a list of valid routes.
+		returns that route as a list """
+	str_routes = []
+
+	# map a route into its relations from the point of view of the destination
+	# example: if origin traverses only clients (33...33) the destinantion will see a path of providers (11...11)
+	for route in routes:
+		str_routes.append(''.join(str(neighbour_rel(route[i], route[i-1])) for i in range(1, len(route))))
+
+	# sort routes. most prefered first, that is sort alphabetically and in length
+	ordered_routes = [y for (x,y) in sorted(zip(str_routes, routes))]
+	#print sorted(str_routes)
+	#print ordered_routes
+	return ordered_routes[0]
 
 
 check_args()
@@ -101,7 +133,9 @@ loadgraph()
 print "Press Return twice to exit."
 while True:
 	orig, dest = prompt()
-	elected = []
-	electroute(orig, dest, [], None, 1)
-	print elected
+	routes = []
+	findroutes(orig, dest, [], None, 1)
+	#print routes
+	print "The elected route is " + str(electroute())
+	#print "The elected route is " + '-'.join(map(str, electroute()))
 	initgraph()
