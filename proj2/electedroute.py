@@ -79,7 +79,7 @@ def findroutes(orig, dest, path, prev, prev_rel):
 	if prev != None:
 		# check if incoming edge has been used previously
 		# if so, add routes if needed and return
-		tmp = graph[orig][{1:3,2:2,3:1}[prev_rel]]	# translate prev_rel to match this node's point of view
+		tmp = graph[orig][4 - prev_rel]	# translate prev_rel to match this node's point of view
 		if [prev, True] in tmp:	# incoming edge has been used
 			# check if a route has been found using this node. if so add a new route that includes the incoming path + the route from this node to dest
 			routes_aux = list(routes)
@@ -95,7 +95,7 @@ def findroutes(orig, dest, path, prev, prev_rel):
 	path.extend([orig])
 	#print path
 
-	# check if this node is the destination and if it was reached via a peer
+	# check if this node is the destination
 	if orig == dest:
 		routes.append(path)	# add path to routes
 		return
@@ -105,6 +105,7 @@ def findroutes(orig, dest, path, prev, prev_rel):
 	elif prev_rel == 1: # this node is a provider of prev. explore any node
 		explore = [3, 2, 1]	# the order is important. explore costumers first. prevents loops
 
+	# follow unused edges
 	for relation in explore:
 		for i, (node, used) in enumerate(graph[orig][relation]):
 			if used == False:	#unused edge
