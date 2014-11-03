@@ -1,5 +1,6 @@
 import sys
 import pprint
+import copy
 
 graph = {}
 
@@ -76,28 +77,23 @@ def findroutes(orig, dest, path, prev, prev_rel):
 		between prev and orig from orig's point of view """
 	global routes
 
-	if prev != None:
-		# check if incoming edge has been used previously
-		# if so, add routes if needed and return
-		tmp = graph[orig][4 - prev_rel]	# translate prev_rel to match this node's point of view
-		if [prev, True] in tmp:	# incoming edge has been used
-			# check if a route has been found using this node. if so add a new route that includes the incoming path + the route from this node to dest
-			routes_aux = list(routes)
-			for i, route in enumerate(routes_aux):
-				for j, val in enumerate(route):
-					if val == orig:
-						routes.append(path + route[j:])
-						break	# all done with this route
-						print routes
-			return
+	print orig
+	if len(routes) > 0 and orig in routes[0]:
+		route_aux = list(routes[0])
+		for i, node in enumerate(route_aux):
+			if node == orig:
+				routes.append(path + route_aux[i:])
+				routes = [electroute()]	# find which route is best: the new or the current
+				break	# all done with this route
 
 	# add current node to path
 	path.extend([orig])
-	#print path
+	print path
 
 	# check if this node is the destination
 	if orig == dest:
 		routes.append(path)	# add path to routes
+		routes = [electroute()]	# find which route is best: the new or the current
 		return
 
 	if prev_rel == 3 or prev_rel == 2:	# this node is either a costumer of prev or a peer of prev. use only costumers
@@ -105,11 +101,17 @@ def findroutes(orig, dest, path, prev, prev_rel):
 	elif prev_rel == 1: # this node is a provider of prev. explore any node
 		explore = [3, 2, 1]	# the order is important. explore costumers first. prevents loops
 
-	# follow unused edges
+	bak = copy.deepcopy(graph[orig])	# backup current edges state for this node for use bellow
+
+	# mark all edges with correct relation from this node as used. this prevents using this node again
 	for relation in explore:
 		for i, (node, used) in enumerate(graph[orig][relation]):
-			if used == False:	#unused edge
-				graph[orig][relation][i][1] = True	# mark outgoing edge as used
+			graph[orig][relation][i][1] = True	# mark outgoing edge as used
+
+	# follow unused edges
+	for relation in explore:
+		for node, used in bak[relation]:
+			if used == False and node != prev:	# unused edge which does not go to prev
 				findroutes(node, dest, list(path), orig, relation)
 
 
@@ -140,6 +142,7 @@ def electroute():
 		return None
 	return ordered_routes[0]
 
+
 check_args()
 loadgraph()
 #pprint.pprint(graph)
@@ -149,7 +152,7 @@ while True:
 	routes = []
 	findroutes(orig, dest, [], None, 1)
 	#print routes
-	print "The elected route is " + str(electroute())
-	#print "The elected route is " + '-'.join(map(str, electroute()))
-	#pprint.pprint(graph)
+	print "The elected route is " + str(routes[0] if len(routes) > 0 else None)
+	#print "The elected route is " + '-'.join(map(str, routes[0] if len(routes) > 0 else [None]))
+	pprint.pprint(graph)
 	initgraph()

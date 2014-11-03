@@ -12,3 +12,4 @@ file | short description
 08.txt | 2, 3 and 4 are 1's clients. 3 is a peer of 2 and 4 but 2 and 4 are not peers. 2 has one client, 5
 09.txt | 1 and 3 are policy disconnected and have common client, 2
 10.txt | 1 and 3 are peers and have a common client, 2
+11.txt | there is a cycle that might mislead the algorithm to pass twice by 2 when going from 1 to 5
