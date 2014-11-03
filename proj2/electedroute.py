@@ -77,7 +77,7 @@ def findroutes(orig, dest, path, prev, prev_rel):
 		between prev and orig from orig's point of view """
 	global routes
 
-	print orig
+	#print orig
 	if len(routes) > 0 and orig in routes[0]:
 		route_aux = list(routes[0])
 		for i, node in enumerate(route_aux):
@@ -88,7 +88,7 @@ def findroutes(orig, dest, path, prev, prev_rel):
 
 	# add current node to path
 	path.extend([orig])
-	print path
+	#print path
 
 	# check if this node is the destination
 	if orig == dest:
@@ -154,5 +154,5 @@ while True:
 	#print routes
 	print "The elected route is " + str(routes[0] if len(routes) > 0 else None)
 	#print "The elected route is " + '-'.join(map(str, routes[0] if len(routes) > 0 else [None]))
-	pprint.pprint(graph)
+	#pprint.pprint(graph)
 	initgraph()
