@@ -37,7 +37,6 @@ def loadgraph():
 
 	f.close()	# close the file
 
-
 def initgraph():
 	""" resets all edges to unused state """
 	global graph
@@ -45,7 +44,6 @@ def initgraph():
 		for edges in nodeedges.values():
 			for edge in edges:
 				edge[1] = False
-
 
 def prompt():
 	""" prompts user to provide an origin and a destination """
@@ -68,7 +66,6 @@ def prompt():
 		print "No node " + str(dest) + " in graph."
 		exit()
 	return (orig, dest)
-
 
 def findroutes(orig, dest, path, prev, prev_rel):
 	""" finds routes from orig to dest and saves them in a global
@@ -114,7 +111,6 @@ def findroutes(orig, dest, path, prev, prev_rel):
 			if used == False and node != prev:	# unused edge which does not go to prev
 				findroutes(node, dest, list(path), orig, relation)
 
-
 def neighbour_rel(node, tosearch):
 	""" finds the relation node has to tosearch """
 	for relation, neighbours in graph[node].items():
@@ -122,7 +118,6 @@ def neighbour_rel(node, tosearch):
 			if neighbour[0] == tosearch:
 				return relation
 	return None
-
 
 def electroute():
 	""" finds the elected route from a list of valid routes.
@@ -142,9 +137,26 @@ def electroute():
 		return None
 	return ordered_routes[0]
 
+def test_policy_connection():
+	
 
+	providers = []
+	for node in graph:
+		if not graph[node][1]:
+			providers.append(node)
+			
+	for nodeA in providers:
+		for nodeB in providers[nodeA:]:
+			findroutes(nodeA, nodeB, [], None, 1)
+			if electroute() == None:
+				print "The graph is NOT policy connected, at least " + str(nodeA) + " and " + str(nodeB) + "can't connect"
+				return
+	print "The graph is policy connected"			
+	return
+				
 check_args()
 loadgraph()
+#test_policy_connection()
 #pprint.pprint(graph)
 print "Press Return twice to exit."
 while True:
