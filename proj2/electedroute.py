@@ -143,15 +143,18 @@ def test_policy_connection():
 	for node in graph:
 		if not graph[node][1]:
 			providers.append(node)
-	
-	print providers
+			
+	#print providers
 	for i, nodeA in enumerate(providers):
-		
 		for j, nodeB in enumerate(providers[i:]):
-			print i, nodeA, j, nodeB
-			findroutes(nodeA, nodeB, [], None, 1)
-			if electroute() == None:
-				print "The graph is NOT policy connected, at least " + str(nodeA) + " and " + str(nodeB) + "can't connect"
+			print "nodeA: " + str(nodeA)
+			print "nodeB: " + str(nodeB)
+			routes = []
+			initgraph()
+			findroutes(nodeA, nodeB, [], None, 1)			
+			print "len(routes) = " + str(len(routes))
+			if len(routes) < 1:
+				print "The graph is NOT policy connected, at least " + str(nodeA) + " and " + str(nodeB) + " can't connect"
 				return
 	print "The graph is policy connected"
 	return
@@ -167,6 +170,7 @@ while True:
 	routes = []
 	initgraph()
 	findroutes(orig, dest, [], None, 1)
+	print len(routes)
 	#print routes
 	print "The elected route is " + str(routes[0] if len(routes) > 0 else None)
 	#print "The elected route is " + '-'.join(map(str, routes[0] if len(routes) > 0 else [None]))
