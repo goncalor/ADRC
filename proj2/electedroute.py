@@ -139,7 +139,6 @@ def electroute():
 
 def test_policy_connection():
 	
-
 	providers = []
 	for node in graph:
 		if not graph[node][1]:
@@ -151,12 +150,14 @@ def test_policy_connection():
 			if electroute() == None:
 				print "The graph is NOT policy connected, at least " + str(nodeA) + " and " + str(nodeB) + "can't connect"
 				return
-	print "The graph is policy connected"			
+	print "The graph is policy connected"
 	return
 				
 check_args()
 loadgraph()
-#test_policy_connection()
+routes = []
+test_policy_connection()
+routes = []
 #pprint.pprint(graph)
 print "Press Return twice to exit."
 while True:
