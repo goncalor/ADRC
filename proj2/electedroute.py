@@ -138,6 +138,7 @@ def electroute():
 	return ordered_routes[0]
 
 def test_policy_connection():
+	global routes
 	
 	providers = []
 	for node in graph:
@@ -147,12 +148,9 @@ def test_policy_connection():
 	#print providers
 	for i, nodeA in enumerate(providers):
 		for j, nodeB in enumerate(providers[i:]):
-			print "nodeA: " + str(nodeA)
-			print "nodeB: " + str(nodeB)
 			routes = []
 			initgraph()
 			findroutes(nodeA, nodeB, [], None, 1)			
-			print "len(routes) = " + str(len(routes))
 			if len(routes) < 1:
 				print "The graph is NOT policy connected, at least " + str(nodeA) + " and " + str(nodeB) + " can't connect"
 				return
