@@ -147,28 +147,13 @@ def test_policy_connection():
 			
 	print tier1
 	for node in tier1:
-		if set([i for (i, j) in graph[node][2]] + [node]).issubset(set(tier1)):
-			if node == 3320:
-				print [i for (i, j) in graph[node][2]]
-			print "The graph is NOT policy connected, at least " + str(node) + " can't connect to some nodes."
-			return			
+		if not set(tier1).issubset(set([i for (i, j) in graph[node][2]] + [node])):
+			print "The graph is NOT policy connected, at least " + str(node) + " cannot connect to some nodes."
+			return
 		#graph[node][2].remove(node)
 	print "The graph is policy connected."
 
-	'''
-	#print providers
-	for i, nodeA in enumerate(providers):
-		for j, nodeB in enumerate(providers[i:]):
-			routes = []
-			initgraph()
-			findroutes(nodeA, nodeB, [], None, 1)			
-			if len(routes) < 1:
-				print "The graph is NOT policy connected, at least " + str(nodeA) + " and " + str(nodeB) + " can't connect"
-				return
-	print "The graph is policy connected"
-	return
-	'''
-				
+
 check_args()
 loadgraph()
 routes = []
