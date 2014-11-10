@@ -139,12 +139,23 @@ def electroute():
 
 def test_policy_connection():
 	global routes
-	
-	providers = []
+
+	tier1 = []
 	for node in graph:
 		if not graph[node][1]:
-			providers.append(node)
+			tier1.append(node)
 			
+	print tier1
+	for node in tier1:
+		if set([i for (i, j) in graph[node][2]] + [node]).issubset(set(tier1)):
+			if node == 3320:
+				print [i for (i, j) in graph[node][2]]
+			print "The graph is NOT policy connected, at least " + str(node) + " can't connect to some nodes."
+			return			
+		#graph[node][2].remove(node)
+	print "The graph is policy connected."
+
+	'''
 	#print providers
 	for i, nodeA in enumerate(providers):
 		for j, nodeB in enumerate(providers[i:]):
@@ -156,6 +167,7 @@ def test_policy_connection():
 				return
 	print "The graph is policy connected"
 	return
+	'''
 				
 check_args()
 loadgraph()
