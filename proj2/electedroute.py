@@ -77,7 +77,6 @@ def findroutes(orig, dest, path, prev, prev_rel):
 		between prev and orig from orig's point of view """
 	global routes
 
-	#print orig
 	if len(routes) > 0 and orig in routes[0]:
 		route_aux = list(routes[0])
 		for i, node in enumerate(route_aux):
@@ -101,7 +100,8 @@ def findroutes(orig, dest, path, prev, prev_rel):
 	elif prev_rel == 1: # this node is a provider of prev. explore any node
 		explore = [3, 2, 1]	# the order is important. explore costumers first. prevents loops
 
-	bak = copy.deepcopy(graph[orig])	# backup current edges state for this node for use bellow
+	# backup current edges state for this node for use bellow
+	bak = copy.deepcopy(graph[orig])
 
 	# mark all edges with correct relation from this node as used. this prevents using this node again
 	for relation in explore:
