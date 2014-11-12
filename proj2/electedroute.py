@@ -75,10 +75,8 @@ def findroute(orig, dest):
 	fringe.add(orig)
 	graph[orig]['visited'] = True
 	graph[orig]['via'] = [0, 1]	# orig reached via provider
-	nrnodes = len(graph)
 	newfringe = set()
 
-	print "nr nodes: " + str(nrnodes)
 	while fringe:	# while fringe is not empty
 		newfringe.clear()
 		for node in fringe:
@@ -94,7 +92,6 @@ def findroute(orig, dest):
 						graph[neighbour]['via'] = [node, relation]
 						newfringe.add(neighbour)
 						if neighbour == dest:
-							print "found dest"
 							route = []
 							node = dest
 							while node != orig:
@@ -121,13 +118,13 @@ def test_policy_connection():
 
 check_args()
 loadgraph()
+print "This network has " + str(len(graph)) + " nodes."
 test_policy_connection()
 #pprint.pprint(graph)
-print "Press Return twice to exit."
+print "\nPress Return twice to exit."
 while True:
 	orig, dest = prompt()
-	initgraph()
 	#print routes
 	print "The elected route is " + str(findroute(orig, dest))
 	#pprint.pprint(graph)
-
+	initgraph()
