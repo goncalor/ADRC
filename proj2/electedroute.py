@@ -101,6 +101,15 @@ def findroute(orig, dest):
 		fringe = set(newfringe)
 	return None
 
+def stats():
+	for nodeA in graph:
+		initgraph()
+		findroute(nodeA, None)
+		for node in graph:
+			if graph[node]['visited'] == False:
+				print "smth not visited"
+				return
+
 
 def test_policy_connection():
 
@@ -120,6 +129,7 @@ check_args()
 loadgraph()
 print "This network has " + str(len(graph)) + " nodes."
 test_policy_connection()
+stats()
 #pprint.pprint(graph)
 print "\nPress Return twice to exit."
 while True:
