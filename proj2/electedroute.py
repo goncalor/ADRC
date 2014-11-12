@@ -78,7 +78,6 @@ def findroute(orig, dest):
 	newfringe = set()
 
 	while fringe:	# while fringe is not empty
-		newfringe.clear()
 		for node in fringe:
 			if graph[node]['via'][1] == 1:
 				explore = [1, 2, 3]
@@ -99,16 +98,55 @@ def findroute(orig, dest):
 								node = graph[node]['via'][0]
 							return [orig] + route
 		fringe = set(newfringe)
+		newfringe.clear()
 	return None
 
+
 def stats():
-	for nodeA in graph:
+	""" generates stats for the network in graph """
+	#global graph
+	fringe = set()
+	newfringe = set()
+	nrnodes = len(graph)
+	paths_count = {1:0, 2:0, 3:0}	# 1 - prov path, 2 - peer path, 3 - costumer path
+	no_path = 0
+	paths_graph = {}	# stores the path type each node is reached by
+	path_translation = {(1,1):1, (1,2):1, (1,3):1, (2,3):2, (3,3):3, (3,1):1, (3,2):2}	# the last two cases are used to lie two the origin
+
+	for node in graph:
+		paths_graph[node] = 0
+
+	for orig in graph:
 		initgraph()
-		findroute(nodeA, None)
-		for node in graph:
-			if graph[node]['visited'] == False:
-				print "smth not visited"
-				return
+		graph[orig]['visited'] = True
+		graph[orig]['via'] = [0, 1]	# orig reached via provider
+		fringe.add(orig)
+
+		paths_graph[orig] = 3 # lie: origin has costumer route
+		nr_unvisited = nrnodes
+
+		while fringe:	# while fringe is not empty
+			for node in fringe:
+				if graph[node]['via'][1] == 1:
+					explore = [1, 2, 3]
+				else:
+					explore = [3]
+
+				for relation in explore:
+					for neighbour in graph[node][relation]:
+						if graph[neighbour]['visited'] == False:
+							nr_unvisited -= 1
+							graph[neighbour]['visited'] = True
+							graph[neighbour]['via'] = [node, relation]
+							newfringe.add(neighbour)
+							paths_graph[neighbour] = path_translation[(paths_graph[node], relation)]
+							paths_count[paths_graph[neighbour]] += 1
+			fringe = set(newfringe)
+			newfringe.clear()
+
+		no_path += nr_unvisited - 1	# minus one to account for origin
+
+	print paths_count, no_path
 
 
 def test_policy_connection():
@@ -134,7 +172,6 @@ stats()
 print "\nPress Return twice to exit."
 while True:
 	orig, dest = prompt()
-	#print routes
+	initgraph()
 	print "The elected route is " + str(findroute(orig, dest))
 	#pprint.pprint(graph)
-	initgraph()
