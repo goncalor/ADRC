@@ -71,16 +71,16 @@ def findroute(orig, dest):
 		returns None if no route exists connecting the nodes """
 	global graph	
 
-	fringe = set()
-	fringe.add(orig)
+	fringe = []
+	fringe.append(orig)
 	graph[orig]['visited'] = True
 	graph[orig]['via'] = [0, 1]	# orig reached via provider
-	newfringe = set()
+	newfringe = []
 
 	while fringe:	# while fringe is not empty
 		for node in fringe:
 			if graph[node]['via'][1] == 1:
-				explore = [1, 2, 3]
+				explore = [3, 2, 1]	# this order is important
 			else:
 				explore = [3]
 
@@ -89,7 +89,7 @@ def findroute(orig, dest):
 					if graph[neighbour]['visited'] == False:
 						graph[neighbour]['visited'] = True
 						graph[neighbour]['via'] = [node, relation]
-						newfringe.add(neighbour)
+						newfringe.append(neighbour)
 						if neighbour == dest:
 							route = []
 							node = dest
@@ -97,30 +97,39 @@ def findroute(orig, dest):
 								route = [node] + route
 								node = graph[node]['via'][0]
 							return [orig] + route
-		fringe = set(newfringe)
-		newfringe.clear()
+		fringe = list(newfringe)
+		newfringe = []
 	return None
+
+
+def print_stats(paths_count, no_path):
+	print "Provider paths: " + str(paths_count[1])
+	print "Peer     paths: " + str(paths_count[2])
+	print "Costumer paths: " + str(paths_count[3])
+	print "Not connected : " + str(no_path)
 
 
 def stats():
 	""" generates stats for the network in graph """
 	#global graph
-	fringe = set()
-	newfringe = set()
+	fringe = []
+	newfringe = []
 	nrnodes = len(graph)
 	paths_count = {1:0, 2:0, 3:0}	# 1 - prov path, 2 - peer path, 3 - costumer path
 	no_path = 0
 	paths_graph = {}	# stores the path type each node is reached by
 	path_translation = {(1,1):1, (1,2):1, (1,3):1, (2,3):2, (3,3):3, (3,1):1, (3,2):2}	# the last two cases are used to lie two the origin
 
+	# populate paths_graph
 	for node in graph:
 		paths_graph[node] = 0
 
+	curr_state = 0
 	for orig in graph:
 		initgraph()
 		graph[orig]['visited'] = True
 		graph[orig]['via'] = [0, 1]	# orig reached via provider
-		fringe.add(orig)
+		fringe.append(orig)
 
 		paths_graph[orig] = 3 # lie: origin has costumer route
 		nr_unvisited = nrnodes
@@ -128,7 +137,7 @@ def stats():
 		while fringe:	# while fringe is not empty
 			for node in fringe:
 				if graph[node]['via'][1] == 1:
-					explore = [1, 2, 3]
+					explore = [3, 2, 1]	# this order is important
 				else:
 					explore = [3]
 
@@ -138,15 +147,21 @@ def stats():
 							nr_unvisited -= 1
 							graph[neighbour]['visited'] = True
 							graph[neighbour]['via'] = [node, relation]
-							newfringe.add(neighbour)
+							newfringe.append(neighbour)
 							paths_graph[neighbour] = path_translation[(paths_graph[node], relation)]
 							paths_count[paths_graph[neighbour]] += 1
-			fringe = set(newfringe)
-			newfringe.clear()
+			fringe = list(newfringe)
+			newfringe = []
 
 		no_path += nr_unvisited - 1	# minus one to account for origin
+		curr_state += 1
+		if curr_state % 100 == 0:
+			print curr_state + " origins analysed"
+			print_stats(paths_count, no_path)
+			print
 
-	print paths_count, no_path
+	print "\n-- Network stats --"
+	print_stats(paths_count, no_path)
 
 
 def test_policy_connection():
