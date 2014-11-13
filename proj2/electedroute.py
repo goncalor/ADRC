@@ -4,6 +4,7 @@ import copy
 
 import time
 
+path_type = {1:"Provider path", 2:"Peer path", 3: "Customer path"}
 graph = {}
 
 def check_args():
@@ -67,7 +68,9 @@ def prompt():
 		exit()
 	return (orig, dest)
 
-
+def flip_relation(relation): #flip_relation(relation) converts from the perspective of the visiting node to the perspective of the visited node.
+	return 4-relation # from 1 (P) = to 3 (C) ; from 2 (R) = to 2 (R) ; from 3 (C) = to 1 (P)
+	
 def findroute(orig, dest):
 	""" finds routes from orig to dest and returns that route as a list.
 		returns None if no route exists connecting the nodes """
@@ -87,19 +90,21 @@ def findroute(orig, dest):
 				explore = [3] 
 
 			for relation in explore:
-				for neighbour in graph[node][relation]:
-					''' (4-relation) converts from the perspective of the visiting node to the perspective of the visited node.
-					ex: nodeA visits customer (3) nodeB, nodeB is visited by provider (1). 4-3 = 1'''
-					if (4-relation) > graph[neighbour]['visited']: 
-						graph[neighbour]['visited'] = (4-relation)
-						graph[neighbour]['via'] = [node, (4-relation)]
+				for neighbour in graph[node][relation]:					
+					if flip_relation(relation) > graph[neighbour]['visited']:						
+						graph[neighbour]['visited'] = flip_relation(relation)
+						graph[neighbour]['via'] = [node, flip_relation(relation)]
 						newfringe.append(neighbour)
 						if neighbour == dest:
 							route = []
 							node = dest
+							second_node = node
 							while node != orig:
+								second_node = node
 								route = [node] + route
 								node = graph[node]['via'][0]
+								
+							print "\n" + path_type[flip_relation(graph[second_node]['via'][1])]
 							return [orig] + route
 		fringe = list(newfringe)
 		newfringe = []
@@ -119,11 +124,11 @@ def stats():
 	fringe = []
 	newfringe = []
 	nrnodes = len(graph)
-	paths_count = {1:0, 2:0, 3:0}	# 1 - prov path, 2 - peer path, 3 - costumer path
+	paths_count = {1:0, 2:0, 3:0}	# 1 - provider path, 2 - peer path, 3 - costumer path
 	no_path = 0
 	paths_graph = {}	# stores the path type each node is reached by
 	path_translation = {(1,1):1, (1,2):1, (1,3):1, (2,3):2, (3,3):3, (3,1):1, (3,2):2}	# the last two cases are used to lie two the origin
-
+		
 	# populate paths_graph
 	for node in graph:		
 		paths_graph[node] = 0
@@ -152,14 +157,15 @@ def stats():
 
 					for relation in explore:
 						for neighbour in graph[node][relation]:
-							if (4-relation) > graph[neighbour]['visited']:
+							if flip_relation(relation) > graph[neighbour]['visited']:
 								if graph[neighbour]['visited'] == 0:
 									nr_unvisited -= 1
-								graph[neighbour]['visited'] = (4-relation)
-								graph[neighbour]['via'] = [node, 4-relation]
+									paths_graph[neighbour] = flip_relation(relation)
+									paths_count[relation] += 1
+								graph[neighbour]['visited'] = flip_relation(relation)
+								graph[neighbour]['via'] = [node, flip_relation(relation)]
 								newfringe.append(neighbour)
-								paths_graph[neighbour] = path_translation[(paths_graph[node], relation)]
-								paths_count[paths_graph[neighbour]] += 1
+								
 				fringe = list(newfringe)
 				newfringe = []
 
@@ -171,7 +177,7 @@ def stats():
 			print
 
 	print "\n-- Network stats --"
-	if (paths_count[1]+paths_count[2]+paths_count[3]+no_path) > (nrnodes-1 * nrnodes):
+	if (paths_count[1]+paths_count[2]+paths_count[3]+no_path) > ((nrnodes-1) * nrnodes):
 		print "\n\tI AM WRONG!\n"
 	print_stats(paths_count, no_path)
 
