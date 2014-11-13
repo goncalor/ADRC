@@ -2,6 +2,8 @@ import sys
 import pprint
 import copy
 
+import time
+
 graph = {}
 
 def check_args():
@@ -188,7 +190,14 @@ check_args()
 loadgraph()
 print "This network has " + str(len(graph)) + " nodes."
 policy_connected = test_policy_connection()
+
+start_time = time.time()
+
 stats()
+
+elapsed_time = time.time() - start_time
+print "elapsed time: " + str(elapsed_time)
+
 #pprint.pprint(graph)
 print "\nPress Return twice to exit."
 while True:
