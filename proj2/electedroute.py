@@ -136,8 +136,8 @@ def stats():
 			nr_unvisited = 1
 		else:
 			initgraph()
-			graph[orig]['visited'] = True
-			graph[orig]['via'] = [0, 1]	# orig reached via provider
+			graph[orig]['visited'] = 3
+			graph[orig]['via'] = [0, 3]	# orig reached via customer (share all routes with the customer
 			fringe.append(orig)
 
 			paths_graph[orig] = 3 # lie: origin has costumer route
@@ -145,17 +145,18 @@ def stats():
 
 			while fringe:	# while fringe is not empty
 				for node in fringe:
-					if graph[node]['via'][1] == 1:
+					if graph[node]['via'][1] == 3:
 						explore = [3, 2, 1]	# this order is important
 					else:
 						explore = [3]
 
 					for relation in explore:
 						for neighbour in graph[node][relation]:
-							if graph[neighbour]['visited'] == False:
-								nr_unvisited -= 1
-								graph[neighbour]['visited'] = True
-								graph[neighbour]['via'] = [node, relation]
+							if (4-relation) > graph[neighbour]['visited']:
+								if graph[neighbour]['visited'] == 0:
+									nr_unvisited -= 1
+								graph[neighbour]['visited'] = (4-relation)
+								graph[neighbour]['via'] = [node, 4-relation]
 								newfringe.append(neighbour)
 								paths_graph[neighbour] = path_translation[(paths_graph[node], relation)]
 								paths_count[paths_graph[neighbour]] += 1
@@ -170,6 +171,8 @@ def stats():
 			print
 
 	print "\n-- Network stats --"
+	if (paths_count[1]+paths_count[2]+paths_count[3]+no_path) > (nrnodes-1 * nrnodes):
+		print "\n\tI AM WRONG!\n"
 	print_stats(paths_count, no_path)
 
 
