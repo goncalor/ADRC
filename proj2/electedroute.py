@@ -156,7 +156,7 @@ def stats():
 		no_path += nr_unvisited - 1	# minus one to account for origin
 		curr_state += 1
 		if curr_state % 100 == 0:
-			print curr_state + " origins analysed"
+			print str(curr_state) + " origins analysed"
 			print_stats(paths_count, no_path)
 			print
 
