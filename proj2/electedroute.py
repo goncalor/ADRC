@@ -69,8 +69,8 @@ def prompt():
 def findroute(orig, dest):
 	""" finds routes from orig to dest and returns that route as a list.
 		returns None if no route exists connecting the nodes """
-	global graph	
-
+	global graph
+	
 	fringe = []
 	fringe.append(orig)
 	graph[orig]['visited'] = True
@@ -121,37 +121,42 @@ def stats():
 	path_translation = {(1,1):1, (1,2):1, (1,3):1, (2,3):2, (3,3):3, (3,1):1, (3,2):2}	# the last two cases are used to lie two the origin
 
 	# populate paths_graph
-	for node in graph:
+	for node in graph:		
 		paths_graph[node] = 0
 
 	curr_state = 0
 	for orig in graph:
-		initgraph()
-		graph[orig]['visited'] = True
-		graph[orig]['via'] = [0, 1]	# orig reached via provider
-		fringe.append(orig)
-
-		paths_graph[orig] = 3 # lie: origin has costumer route
 		nr_unvisited = nrnodes
+		if (policy_connected == True) and (not graph[orig][2]) and (not graph[orig][3]):
+			paths_count[1] += nrnodes - 1
+			nr_unvisited = 1
+		else:
+			initgraph()
+			graph[orig]['visited'] = True
+			graph[orig]['via'] = [0, 1]	# orig reached via provider
+			fringe.append(orig)
 
-		while fringe:	# while fringe is not empty
-			for node in fringe:
-				if graph[node]['via'][1] == 1:
-					explore = [3, 2, 1]	# this order is important
-				else:
-					explore = [3]
+			paths_graph[orig] = 3 # lie: origin has costumer route
+			
 
-				for relation in explore:
-					for neighbour in graph[node][relation]:
-						if graph[neighbour]['visited'] == False:
-							nr_unvisited -= 1
-							graph[neighbour]['visited'] = True
-							graph[neighbour]['via'] = [node, relation]
-							newfringe.append(neighbour)
-							paths_graph[neighbour] = path_translation[(paths_graph[node], relation)]
-							paths_count[paths_graph[neighbour]] += 1
-			fringe = list(newfringe)
-			newfringe = []
+			while fringe:	# while fringe is not empty
+				for node in fringe:
+					if graph[node]['via'][1] == 1:
+						explore = [3, 2, 1]	# this order is important
+					else:
+						explore = [3]
+
+					for relation in explore:
+						for neighbour in graph[node][relation]:
+							if graph[neighbour]['visited'] == False:
+								nr_unvisited -= 1
+								graph[neighbour]['visited'] = True
+								graph[neighbour]['via'] = [node, relation]
+								newfringe.append(neighbour)
+								paths_graph[neighbour] = path_translation[(paths_graph[node], relation)]
+								paths_count[paths_graph[neighbour]] += 1
+				fringe = list(newfringe)
+				newfringe = []
 
 		no_path += nr_unvisited - 1	# minus one to account for origin
 		curr_state += 1
@@ -174,14 +179,15 @@ def test_policy_connection():
 	for node in tier1:
 		if not tier1 <= graph[node][2] | set([node]):
 			print "The graph is NOT policy connected. At least " + str(node) + " cannot connect to some nodes."
-			return
+			return False
 	print "The graph is policy connected."
+	return True
 
 
 check_args()
 loadgraph()
 print "This network has " + str(len(graph)) + " nodes."
-test_policy_connection()
+policy_connected = test_policy_connection()
 stats()
 #pprint.pprint(graph)
 print "\nPress Return twice to exit."
