@@ -34,7 +34,7 @@ def loadgraph():
 		relation = int(tmp[2])
 
 		if head not in graph:	# let us add a new node
-			graph[head] = {1:set(), 2:set(), 3:set(), "visited":False, "via":[0,0]}	# 1 - providers, 2 - peers, 3 - costumers
+			graph[head] = {1:set(), 2:set(), 3:set(), "visited":0, "via":[0,0]}	# 1 - providers, 2 - peers, 3 - costumers
 		graph[head][relation].add(tail)	# add tail to head's relations and initialise edge as unused
 
 	f.close()	# close the file
@@ -43,7 +43,7 @@ def initgraph():
 	""" resets all edges to unused state """
 	global graph
 	for node in graph.values():
-		node['visited'] = False
+		node['visited'] = 0
 
 def prompt():
 	""" prompts user to provide an origin and a destination """
@@ -75,22 +75,24 @@ def findroute(orig, dest):
 	
 	fringe = []
 	fringe.append(orig)
-	graph[orig]['visited'] = True
-	graph[orig]['via'] = [0, 1]	# orig reached via provider
+	graph[orig]['visited'] = 3 # orig is tagged as visited by a client to avoid any further searches
+	graph[orig]['via'] = [0, 3]	# orig reached via customer
 	newfringe = []
 
 	while fringe:	# while fringe is not empty
 		for node in fringe:
-			if graph[node]['via'][1] == 1:
-				explore = [3, 2, 1]	# this order is important
-			else:
-				explore = [3]
+			if graph[node]['via'][1] == 3: # if the node was reached by a customer, share every connection with him
+				explore = [3, 2, 1]	# this order is important, clients, then peers and finally providers
+			else: # else, the node only gets money if the traffic is for one of his customers, share only those
+				explore = [3] 
 
 			for relation in explore:
 				for neighbour in graph[node][relation]:
-					if graph[neighbour]['visited'] == False:
-						graph[neighbour]['visited'] = True
-						graph[neighbour]['via'] = [node, relation]
+					''' (4-relation) converts from the perspective of the visiting node to the perspective of the visited node.
+					ex: nodeA visits customer (3) nodeB, nodeB is visited by provider (1). 4-3 = 1'''
+					if (4-relation) > graph[neighbour]['visited']: 
+						graph[neighbour]['visited'] = (4-relation)
+						graph[neighbour]['via'] = [node, (4-relation)]
 						newfringe.append(neighbour)
 						if neighbour == dest:
 							route = []
@@ -176,10 +178,10 @@ def test_policy_connection():
 	tier1 = set()
 	for node in graph:
 		if not graph[node][1]:
-			tier1.add(node)
+			tier1.add(node)  #find all tier 1 nodes. these are the nodes that have no providers, only peers or clients.
 			
-	for node in tier1:
-		if not tier1 <= graph[node][2] | set([node]):
+	for node in tier1: # check if each tier 1 node is a peer of all other tier 1 nodes, otherwise the internet is not policy connected
+		if not tier1 <= graph[node][2] | set([node]): 
 			print "The graph is NOT policy connected. At least " + str(node) + " cannot connect to some nodes."
 			return False
 	print "The graph is policy connected."
@@ -196,7 +198,7 @@ start_time = time.time()
 stats()
 
 elapsed_time = time.time() - start_time
-print "elapsed time: " + str(elapsed_time)
+print "\nelapsed time: " + str(elapsed_time) + " seconds"
 
 #pprint.pprint(graph)
 print "\nPress Return twice to exit."
