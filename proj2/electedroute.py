@@ -35,7 +35,7 @@ def loadgraph():
 		relation = int(tmp[2])
 
 		if head not in graph:	# let us add a new node
-			graph[head] = {1:set(), 2:set(), 3:set(), "visited":0, "via":[0,0]}	# 1 - providers, 2 - peers, 3 - costumers
+			graph[head] = {1:set(), 2:set(), 3:set(), "visited":None, "via":[0,0]}	# 1 - providers, 2 - peers, 3 - costumers
 		graph[head][relation].add(tail)	# add tail to head's relations and initialise edge as unused
 
 	f.close()	# close the file
@@ -44,7 +44,7 @@ def initgraph():
 	""" resets all edges to unused state """
 	global graph
 	for node in graph.values():
-		node['visited'] = 0
+		node['visited'] = None
 
 def prompt():
 	""" prompts user to provide an origin and a destination """
@@ -67,9 +67,10 @@ def prompt():
 		print "No node " + str(dest) + " in graph."
 		exit()
 	return (orig, dest)
-
+'''
 def flip_relation(relation): #flip_relation(relation) converts from the perspective of the visiting node to the perspective of the visited node.
 	return 4-relation # from 1 (P) = to 3 (C) ; from 2 (R) = to 2 (R) ; from 3 (C) = to 1 (P)
+'''
 	
 def findroute(orig, dest):
 	""" finds routes from orig to dest and returns that route as a list.
@@ -78,22 +79,22 @@ def findroute(orig, dest):
 	
 	fringe = []
 	fringe.append(orig)
-	graph[orig]['visited'] = 3 # orig is tagged as visited by a client to avoid any further searches
-	graph[orig]['via'] = [0, 3]	# orig reached via customer
+	graph[orig]['visited'] = 1 # orig is tagged as visited by a node that sees him as a provider to avoid any further searches
+	graph[orig]['via'] = [0, 1]	# orig reached via a node that sees him as a provider
 	newfringe = []
 
 	while fringe:	# while fringe is not empty
 		for node in fringe:
-			if graph[node]['via'][1] == 3: # if the node was reached by a customer, share every connection with him
+			if graph[node]['via'][1] == 1: # if the node was reached by a node that sees him as a provider, share every connection with him
 				explore = [3, 2, 1]	# this order is important, clients, then peers and finally providers
 			else: # else, the node only gets money if the traffic is for one of his customers, share only those
 				explore = [3] 
 
 			for relation in explore:
 				for neighbour in graph[node][relation]:					
-					if flip_relation(relation) > graph[neighbour]['visited']:						
-						graph[neighbour]['visited'] = flip_relation(relation)
-						graph[neighbour]['via'] = [node, flip_relation(relation)]
+					if (relation == 1 and graph[neighbour]['visited'] != 1) or graph[neighbour]['visited'] == None: 		 			
+						graph[neighbour]['visited'] = relation
+						graph[neighbour]['via'] = [node, relation]
 						newfringe.append(neighbour)
 						if neighbour == dest:
 							route = []
@@ -104,7 +105,7 @@ def findroute(orig, dest):
 								route = [node] + route
 								node = graph[node]['via'][0]
 								
-							print "\n" + path_type[flip_relation(graph[second_node]['via'][1])]
+							print "\n" + path_type[graph[second_node]['via'][1]]
 							return [orig] + route
 		fringe = list(newfringe)
 		newfringe = []
@@ -141,8 +142,8 @@ def stats():
 			nr_unvisited = 1
 		else:
 			initgraph()
-			graph[orig]['visited'] = 3
-			graph[orig]['via'] = [0, 3]	# orig reached via customer (share all routes with the customer
+			graph[orig]['visited'] = 1
+			graph[orig]['via'] = [0, 1]	# orig reached via a node that sees him as a provider
 			fringe.append(orig)
 
 			paths_graph[orig] = 3 # lie: origin has costumer route
@@ -150,20 +151,20 @@ def stats():
 
 			while fringe:	# while fringe is not empty
 				for node in fringe:
-					if graph[node]['via'][1] == 3:
+					if graph[node]['via'][1] == 1:
 						explore = [3, 2, 1]	# this order is important
 					else:
 						explore = [3]
 
 					for relation in explore:
 						for neighbour in graph[node][relation]:
-							if flip_relation(relation) > graph[neighbour]['visited']:
-								if graph[neighbour]['visited'] == 0:
+							if (relation == 1 and graph[neighbour]['visited'] != 1) or graph[neighbour]['visited'] == None:
+								if graph[neighbour]['visited'] == None:
 									nr_unvisited -= 1
-									paths_graph[neighbour] = flip_relation(relation)
+									paths_graph[neighbour] = relation
 									paths_count[relation] += 1
-								graph[neighbour]['visited'] = flip_relation(relation)
-								graph[neighbour]['via'] = [node, flip_relation(relation)]
+								graph[neighbour]['visited'] = relation
+								graph[neighbour]['via'] = [node, relation]
 								newfringe.append(neighbour)
 								
 				fringe = list(newfringe)
