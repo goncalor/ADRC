@@ -91,8 +91,8 @@ def findroute(orig, dest):
 				explore = [3] 
 
 			for relation in explore:
-				for neighbour in graph[node][relation]:					
-					if (relation == 1 and graph[neighbour]['visited'] != 1) or graph[neighbour]['visited'] == None: 		 			
+				for neighbour in graph[node][relation]:
+					if (relation == 1 and graph[neighbour]['visited'] != 1) or graph[neighbour]['visited'] == None:
 						graph[neighbour]['visited'] = relation
 						graph[neighbour]['via'] = [node, relation]
 						newfringe.append(neighbour)
@@ -128,8 +128,8 @@ def stats():
 	paths_count = {1:0, 2:0, 3:0}	# 1 - provider path, 2 - peer path, 3 - costumer path
 	no_path = 0
 	paths_graph = {}	# stores the path type each node is reached by
-	path_translation = {(1,1):1, (1,2):1, (1,3):1, (2,3):2, (3,3):3, (3,1):1, (3,2):2}	# the last two cases are used to lie two the origin
-		
+	path_translation = {(1,1):1, (1,2):1, (1,3):1, (2,3):2, (3,3):3, (3,1):1, (3,2):2}	# the last two cases are used to lie to the origin
+
 	# populate paths_graph
 	for node in graph:		
 		paths_graph[node] = 0
@@ -137,45 +137,52 @@ def stats():
 	curr_state = 0
 	for orig in graph:
 		nr_unvisited = nrnodes
-		if (policy_connected == True) and (not graph[orig][2]) and (not graph[orig][3]):
-			paths_count[1] += nrnodes - 1
-			nr_unvisited = 1
-		else:
-			initgraph()
-			graph[orig]['visited'] = 1
-			graph[orig]['via'] = [0, 1]	# orig reached via a node that sees him as a provider
-			fringe.append(orig)
 
-			paths_graph[orig] = 3 # lie: origin has costumer route
-			
-
-			while fringe:	# while fringe is not empty
-				for node in fringe:
-					if graph[node]['via'][1] == 1:
-						explore = [3, 2, 1]	# this order is important
-					else:
-						explore = [3]
-
-					for relation in explore:
-						for neighbour in graph[node][relation]:
-							if (relation == 1 and graph[neighbour]['visited'] != 1) or graph[neighbour]['visited'] == None:
-								if graph[neighbour]['visited'] == None:
-									nr_unvisited -= 1
-									paths_graph[neighbour] = relation
-									paths_count[relation] += 1
-								graph[neighbour]['visited'] = relation
-								graph[neighbour]['via'] = [node, relation]
-								newfringe.append(neighbour)
-								
-				fringe = list(newfringe)
-				newfringe = []
-
-		no_path += nr_unvisited - 1	# minus one to account for origin
 		curr_state += 1
 		if curr_state % 100 == 0:
 			print str(curr_state) + " origins analysed"
 			print_stats(paths_count, no_path)
 			print
+
+		if (policy_connected == True) and (not graph[orig][2]) and (not graph[orig][3]):	# network is policy connected and orig has only providers
+			paths_count[1] += nrnodes - 1	# minus one to account for origin
+			continue	# all done for this orig
+
+		initgraph()
+		graph[orig]['visited'] = 1
+		graph[orig]['via'] = [0, 1]	# orig reached via a node that sees him as a provider
+		fringe.append(orig)
+
+		paths_graph[orig] = 3 # lie: origin has costumer route
+
+		while fringe:	# while fringe is not empty
+			for node in fringe:
+				if graph[node]['via'][1] == 1:
+					explore = [3, 2, 1]	# this order is important
+				else:
+					explore = [3]
+
+				for relation in explore:
+					for neighbour in graph[node][relation]:
+						if (relation == 1 and graph[neighbour]['visited'] != 1) or graph[neighbour]['visited'] == None:
+							if graph[neighbour]['visited'] == None:
+								nr_unvisited -= 1
+
+							paths_graph[neighbour] = path_translation[(paths_graph[node], relation)]
+							paths_count[paths_graph[neighbour]] += 1
+
+							# need to correct stats since we had a wrong path type before
+							if graph[neighbour]['visited'] != 1 and graph[neighbour]['visited'] != None:
+								paths_count[graph[neighbour]['visited']] -= 1
+
+							graph[neighbour]['visited'] = relation
+							graph[neighbour]['via'] = [node, relation]
+							newfringe.append(neighbour)
+							print orig, node, neighbour, paths_count
+
+			fringe = list(newfringe)
+			newfringe = []
+		no_path += nr_unvisited - 1	# minus one to account for origin
 
 	print "\n-- Network stats --"
 	if (paths_count[1]+paths_count[2]+paths_count[3]+no_path) > ((nrnodes-1) * nrnodes):
@@ -217,3 +224,7 @@ while True:
 	initgraph()
 	print "The elected route is " + str(findroute(orig, dest))
 	#pprint.pprint(graph)
+	#for i in graph:
+	#	for j in graph:
+	#		initgraph()
+	#		print str(findroute(i, j))
