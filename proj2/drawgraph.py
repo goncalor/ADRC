@@ -42,18 +42,6 @@ def loadgraph():
 	f.close()	# close the file
 
 
-def save_graph2(graph, file_name):
-
-	pos = nx.shell_layout(graph)
-	nx.draw_networkx_nodes(graph, pos)
-	nx.draw_networkx_edges(graph, pos)
-	nx.draw_networkx_labels(graph, pos)
-
-	plt.axis('off')
-	plt.savefig(file_name, bbox_inches="tight")
-	plt.close()
-
-
 def draw_graph(graph):
 
 	G = nx.DiGraph()
@@ -62,8 +50,6 @@ def draw_graph(graph):
 	provider = []
 	peer = []
 	costumer = []
-	tier1 = []
-	tierN = []
 	for node in graph:
 		for relation in range(1, 4):
 			for edge in graph[node][relation]:
@@ -96,12 +82,10 @@ def draw_graph(graph):
 
 check_args()
 loadgraph()
-
 draw_graph(graph)
 
 plt.axis('off')
 plt.savefig(sys.argv[1] + ".png")
 if not no_show:
 	plt.show()
-
 
