@@ -168,12 +168,12 @@ def stats():
 							if graph[neighbour]['visited'] == None:
 								nr_unvisited -= 1
 
-							paths_graph[neighbour] = path_translation[(paths_graph[node], relation)]
-							paths_count[paths_graph[neighbour]] += 1
+								paths_graph[neighbour] = path_translation[(paths_graph[node], relation)]
+								paths_count[paths_graph[neighbour]] += 1
 
 							# need to correct stats since we had a wrong path type before
-							if graph[neighbour]['visited'] != 1 and graph[neighbour]['visited'] != None:
-								paths_count[graph[neighbour]['visited']] -= 1
+							#if graph[neighbour]['visited'] != 1 and graph[neighbour]['visited'] != None:
+							#	paths_count[graph[neighbour]['visited']] -= 1
 
 							graph[neighbour]['visited'] = relation
 							graph[neighbour]['via'] = [node, relation]
