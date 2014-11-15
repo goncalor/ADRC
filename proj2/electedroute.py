@@ -5,13 +5,17 @@ import copy
 import time
 
 path_type = {1:"Provider path", 2:"Peer path", 3: "Customer path"}
+disable_stats = False
 graph = {}
 
 def check_args():
 	""" checks if a file was supplied to the script """
 	if len(sys.argv) < 2:
-		print "Usage: python " + sys.argv[0] + " <internet_file>\n"
+		print "Usage: python " + sys.argv[0] + " <internet_file> [--disable-stats]\n"
 		exit()
+	elif len(sys.argv) == 3 and sys.argv[2] == "--disable-stats":
+		global disable_stats
+		disable_stats = True
 
 def loadgraph():
 	""" loads the graph from a file into memory """
@@ -210,10 +214,11 @@ loadgraph()
 print "This network has " + str(len(graph)) + " nodes."
 policy_connected = test_policy_connection()
 
-start_time = time.time()
-stats()
-elapsed_time = time.time() - start_time
-print "\nelapsed time: " + str(elapsed_time) + " seconds"
+if not disable_stats:
+	start_time = time.time()
+	stats()
+	elapsed_time = time.time() - start_time
+	print "\nelapsed time: " + str(elapsed_time) + " seconds"
 
 #pprint.pprint(graph)
 print "\nPress Return twice to exit."
