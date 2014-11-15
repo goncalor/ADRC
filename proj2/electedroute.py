@@ -1,7 +1,5 @@
 import sys
 import pprint
-import copy
-
 import time
 
 path_type = {1:"Provider path", 2:"Peer path", 3: "Customer path"}
@@ -71,21 +69,21 @@ def prompt():
 		print "No node " + str(dest) + " in graph."
 		exit()
 	return (orig, dest)
-'''
-def flip_relation(relation): #flip_relation(relation) converts from the perspective of the visiting node to the perspective of the visited node.
-	return 4-relation # from 1 (P) = to 3 (C) ; from 2 (R) = to 2 (R) ; from 3 (C) = to 1 (P)
-'''
+
 	
 def findroute(orig, dest):
 	""" finds routes from orig to dest and returns that route as a list.
 		returns None if no route exists connecting the nodes """
 	global graph
-	
+
 	fringe = []
 	fringe.append(orig)
 	graph[orig]['visited'] = 1 # orig is tagged as visited by a node that sees him as a provider to avoid any further searches
 	graph[orig]['via'] = [0, 1]	# orig reached via a node that sees him as a provider
 	newfringe = []
+
+	if orig == dest:
+		return [orig]
 
 	while fringe:	# while fringe is not empty
 		for node in fringe:
@@ -195,7 +193,8 @@ def stats():
 
 
 def test_policy_connection():
-
+	""" tests if a network is policy connected.
+		returns True or False accordingly """
 	tier1 = set()
 	for node in graph:
 		if not graph[node][1]:
@@ -203,7 +202,7 @@ def test_policy_connection():
 			
 	for node in tier1: # check if each tier 1 node is a peer of all other tier 1 nodes, otherwise the internet is not policy connected
 		if not tier1 <= graph[node][2] | set([node]): 
-			print "The graph is NOT policy connected. At least " + str(node) + " cannot connect to some nodes."
+			print "The graph is not policy connected. At least " + str(node) + " cannot connect to some nodes."
 			return False
 	print "The graph is policy connected."
 	return True
