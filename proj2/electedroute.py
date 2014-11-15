@@ -135,12 +135,14 @@ def stats():
 		paths_graph[node] = 0
 
 	curr_state = 0
+	start_time = time.time()
+
 	for orig in graph:
 		nr_unvisited = nrnodes
 
 		curr_state += 1
 		if curr_state % 100 == 0:
-			print str(curr_state) + " origins analysed"
+			print str(curr_state) + " origins analysed" + "   (t = " + str(time.time() - start_time) + " s)"
 			print_stats(paths_count, no_path)
 			print
 
@@ -165,20 +167,18 @@ def stats():
 				for relation in explore:
 					for neighbour in graph[node][relation]:
 						if (relation == 1 and graph[neighbour]['visited'] != 1) or graph[neighbour]['visited'] == None:
+
+							paths_graph[neighbour] = path_translation[(paths_graph[node], relation)]
 							if graph[neighbour]['visited'] == None:
 								nr_unvisited -= 1
-
-								paths_graph[neighbour] = path_translation[(paths_graph[node], relation)]
+								#print orig, node, neighbour
 								paths_count[paths_graph[neighbour]] += 1
-
-							# need to correct stats since we had a wrong path type before
-							#if graph[neighbour]['visited'] != 1 and graph[neighbour]['visited'] != None:
-							#	paths_count[graph[neighbour]['visited']] -= 1
 
 							graph[neighbour]['visited'] = relation
 							graph[neighbour]['via'] = [node, relation]
 							newfringe.append(neighbour)
-							print orig, node, neighbour, paths_count
+							#print orig, node, neighbour, paths_graph, paths_count
+							#pprint.pprint(graph)
 
 			fringe = list(newfringe)
 			newfringe = []
@@ -211,9 +211,7 @@ print "This network has " + str(len(graph)) + " nodes."
 policy_connected = test_policy_connection()
 
 start_time = time.time()
-
 stats()
-
 elapsed_time = time.time() - start_time
 print "\nelapsed time: " + str(elapsed_time) + " seconds"
 
@@ -227,4 +225,5 @@ while True:
 	#for i in graph:
 	#	for j in graph:
 	#		initgraph()
-	#		print str(findroute(i, j))
+	#		#print str(findroute(i, j))
+	#		findroute(i, j)
