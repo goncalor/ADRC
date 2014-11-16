@@ -114,21 +114,23 @@ def findroute(orig, dest):
 	return None
 
 
-def print_stats(paths_count, no_path):
-	print "Provider paths: " + str(paths_count[1])
-	print "Peer     paths: " + str(paths_count[2])
-	print "Costumer paths: " + str(paths_count[3])
-	print "Not connected : " + str(no_path)
+def print_stats(route_stats):
+	print "Provider paths: " + str(route_stats[1])
+	print "Peer     paths: " + str(route_stats[2])
+	print "Costumer paths: " + str(route_stats[3])
+	print "Not connected : " + str(route_stats[0])
 
 def stats():
 	global graph
 	nrnodes = len(graph)
 	local_pref = [[None for i in range(nrnodes)] for j in range(nrnodes)] # None will be considered -infinity
-	next = [[None for i in range(nrnodes)] for j in range(nrnodes)] 
 	
 	index_map = dict(zip(graph.keys(), range(nrnodes))) # nodes aren't necessarily numbered from 0 to nrnodes
 	allowed_routes = [[1,1,1],[None,None,2],[None,None,3]] # for each combination of route type ik and kj, indexing this gives you the resulting type of route
-		
+	
+	route_stats = {0:0, 1:0, 2:0, 3:0}
+	pprint.pprint(route_stats)
+	
 	for u in graph.keys():
 		print u, index_map[u]
 		local_pref[index_map[u]][index_map[u]] = 0
@@ -136,22 +138,25 @@ def stats():
 			for v in graph[u][relation]:
 				local_pref[index_map[u]][index_map[v]] = relation
 				
-	pprint.pprint(local_pref)			
+	#pprint.pprint(local_pref)			
 		
 	for k in range(nrnodes):
 		for i in range(nrnodes):
 			for j in range(nrnodes):													#relation 1		relation 2
 				if (min(local_pref[i][k], local_pref[k][j]) > local_pref[i][j]) and (allowed_routes[local_pref[i][k]-1][local_pref[k][j]-1] != None):
 					local_pref[i][j] = min(local_pref[i][k], local_pref[k][j])
-					# print "\nk i j"
-					# print k, i, j
-					# print "ij ik kj"
-					# print local_pref[i][j], local_pref[i][k], local_pref[k][j]
-					next[i][j] = k
 	
-	pprint.pprint(local_pref)
-	pprint.pprint(next)
-
+	
+	
+	for i in range(nrnodes):
+		for j in range(nrnodes):
+			if i != j:
+				if local_pref[i][j] != None:
+					route_stats[local_pref[i][j]] += 1			
+				else: 
+					route_stats[0] += 1
+	print_stats(route_stats)
+	#pprint.pprint(local_pref)
 
 def test_policy_connection():
 	""" tests if a network is policy connected.
