@@ -173,10 +173,10 @@ def stats():
 
 				for relation in explore:
 					for neighbour in graph[node][relation]:
-						if (relation == 1 and graph[neighbour]['visited'] != 1) or graph[neighbour]['visited'] == None:
+						if (relation == 1 and graph[neighbour]['visited'] != 1) or graph[neighbour]['visited'] == False:
 
 							paths_graph[neighbour] = path_translation[(paths_graph[node], relation)]
-							if graph[neighbour]['visited'] == None:
+							if graph[neighbour]['visited'] == False:
 								nr_unvisited -= 1
 								#print orig, node, neighbour
 								paths_count[paths_graph[neighbour]] += 1
