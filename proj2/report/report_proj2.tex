@@ -27,11 +27,13 @@
 \section{Procura de Rota AS-AS}
 O primeiro problema que nos é colocado é encontrar a rota que um sistema autónomo (AS) usa para chegar a outro. As únicas rotas possíveis são de um de três tipos: \textit{provider path}, \textit{peer path} ou \textit{costumer path}. Um AS prefere sempre uma rota de cliente a uma de par, uma de par a uma de fornecedor e uma de cliente a uma de fornecedor.
 
-Pensámos e implementamos diversos algoritmos. Começámos por implementar um algoritmo DFS (depth-first search) que descobria todos as rotas permitidas da origem para o destino e após isso transformava as rotas numa string de 1's, 2's e 3's que eram depois ordenadas lexicograficamente de forma a descobrir qual a rota mais vantajosa em termos de tipo em termos de tipo de caminho usado, tamanho do caminho e número de nós de cada tipo existentes no caminho. Embora esta solução funcionasse perfeitamente notámos que era computacionalmente dispendiosa pelo que decidimos descobrir um melhor algoritmo.
+Pensámos e implementámos diversos algoritmos. Começámos por implementar um algoritmo DFS (depth-first search) que descobria todas as rotas permitidas da origem para o destino e após isso transformava as rotas numa string de 1's, 2's e 3's que eram depois ordenadas lexicograficamente de forma a descobrir qual a rota mais vantajosa em termos de tipo de caminho usado, tamanho do caminho e número de nós de cada tipo existentes no caminho. Embora esta solução funcionasse perfeitamente notámos que era computacionalmente dispendiosa pelo que decidimos descobrir um melhor algoritmo.
 
-Pensámos então em implementar o algoritmo de procura com base numa BFS (breadth-first search) com restrições. Com uma BFS quando o algoritmo chega ao nó de destino sabemos que o caminho descoberto tem seguramente o caminho mínimo. No entanto devido às restrições impostas pelos tipo de caminhos que são permitidos traz alguns problemas. Veja-se por exemplo a rede da Figura~\ref{fig:11}. Considere-se que corremos uma BFS com a restrição de que um nó a que se tenha chegado através de um fornecedor não pode explorar os seus fornecedores. Neste caso se tivermos o nó 4 como origem e 1 como destino o que se ocorre é que 4 encontra 3 e 2, que marca como usados. 2 não pode continuar para 1 e 3 já está usado. Quando 3 tenta usar 2 para chegar a 1 (o que é legítimo) vê que 2 já está marcado e portanto para e 1 não é encontrado. Ou seja a BFS restringida a seguir apenas caminhos válidos e nós não visitados pode não encontrar o destino quando efectivamente existe uma rota válida.
+Pensámos então em implementar o algoritmo de procura com base numa BFS (breadth-first search) com restrições. Com uma BFS quando o algoritmo chega ao nó de destino sabemos que o caminho descoberto tem seguramente o caminho mínimo. No entanto devido às restrições impostas pelo tipo de caminhos que são permitidos traz alguns problemas. Veja-se por exemplo a rede da Figura~\ref{fig:11}. Considere-se que corremos uma BFS com a restrição de que um nó a que se tenha chegado através de um fornecedor não pode explorar os seus fornecedores. Neste caso se tivermos o nó 4 como origem e 1 como destino o que ocorre é que 4 encontra 3 e 2, que marca como usados. 2 não pode continuar para 1 e 3 já está usado. Quando 3 tenta usar 2 para chegar a 1 (o que é legítimo) vê que 2 já está marcado e portanto pára e 1 não é encontrado. Ou seja a BFS restringida a seguir apenas caminhos válidos e nós não visitados pode não encontrar o destino quando efectivamente existe uma rota válida.
 
 A nossa solução final é baseada numa BFS mas que não é tão \textit{greedy}. O algoritmo pode ser implementado recursivamente e a ideia base é um nó visitar primeiro todos os seus caminhos de cliente, depois todos os seus caminhos de par e por fim todos os seus caminhos de fornecedor, sendo que cada nó é usado apenas uma vez. O algoritmo é apresentado em mais pormenor no Algoritmo~\ref{algo:findroute}.
+
+Note-se que o algoritmo não pode parar mal chegue à origem porque não é garantido que o melhor caminho seja o primeiro a ser descoberto. Para além disso há que notar que para evitar o problema de um nó ser marcado como inutilizável quando ainda vai ser preciso para chegar ao destino passámos a marcar o nó como inutilizável apenas quando é visitado por um cliente.
 
 \begin{figure}[h]
 \centering
@@ -39,7 +41,6 @@ A nossa solução final é baseada numa BFS mas que não é tão \textit{greedy}
 \caption{grafo do ficheiro 11.txt}
 \label{fig:11}
 \end{figure}
-
 
 \begin{algorithm}
 \begin{lstlisting}
@@ -60,9 +61,9 @@ findroute(dest, explore, fringe):
 
       for each neighbout who has relation:
         if neighbour is unvisited
-              or node is a provider
-              and has not been more than once:
-          mark neighbour as is visted from a node
+              or (node is a provider
+              and has not been visited as a provider):
+          mark neighbour as is visited from a node
               who has relation to it
           neighbour has been visited by node
           add neighbour to new_fringe
@@ -72,7 +73,6 @@ findroute(dest, explore, fringe):
     else:
       findroute(dest, {costumers}, new_fringe)
     new_fringe = {}
-
 \end{lstlisting}
 \caption{algoritmo que encontra a melhor rota AS-AS}
 \label{algo:findroute}
@@ -80,8 +80,32 @@ findroute(dest, explore, fringe):
 
 
 \section{Estatísticas da Rede}
+Nesta parte o objectivo é fazer um programa que recolha estatísticas de uma rede, nomeadamente que conte o número de caminhos de cada um dos três tipos. Para resolver este problema estudámos vários algoritmos nas esperança de que algum resultasse num implementação mais eficiente do que correr N vezes o Algoritmo~\ref{algo:findroute}. No entanto, não encontrámos uma solução melhor do que essa. Ainda assim notámos uma optimização que pode ser feita: quando uma rede é policy connected temos certeza de que um nó consegue chegar a todos os outros nós. Sendo assim, numa rede policy connected um nó que não tenha nem clientes nem pares garantidamente conseguem chegar a todos os outros nós por meio de caminhos de fornecedor. Isso faz com que quando se encontra um nó nestas condições não seja necessário correr o Algoritmo~\ref{algo:findroute}.
+
+
 
 \section{Redes \textit{Policy Connected}}
+Uma rede \textit{policy connected} é uma em que cada nó tem uma rota legal para todos os outros. Um nó tem sempre uma rota legal para os seus clientes e para os clientes dos seus pares. Facilmente se percebe que para que haja uma rota legal de cada nó para todos os outros é preciso que os nós Tier-1 estejam ligados por entre si (por relações de par). Sendo assim é fácil escrever um algoritmo que verifique se a rede é policy connected. Esse algoritmo é o Algoritmo~\ref{algo:testpolicy}.
+
+\begin{algorithm}
+\begin{lstlisting}
+is_policy_connected():
+  tier1 = {}
+
+  for each node in graph:
+    if node has no providers:
+      add node to tier1
+
+  for each node in tier1:
+    if tier1 is in {node.peers} union with {node}
+      return is not policy connected
+
+  return is policy connected
+\end{lstlisting}
+\caption{algoritmo verifica se uma rede é policy connected}
+\label{algo:testpolicy}
+\end{algorithm}
+
 
 \section{Visualizador de Grafos}
 Ao longo deste projecto criámos alguns grafos para melhor podermos testar as várias partes do projecto. De forma a podermos visualizar mais facilmente os grafos criados desenvolvemos em Python um \textit{script} que dado um ficheiro que descreve uma rede cria uma representação gráfica dessa rede.
@@ -89,7 +113,6 @@ Ao longo deste projecto criámos alguns grafos para melhor podermos testar as v�
 Nos grafos criados por este programa os nós Tier-1 são marcados a vermelho e os nós que não têm nem pares nem clientes são marcados a verde. Os restantes nós são marcados a branco. A preto são desenhadas as arestas que indicam relações de pares e a verde as arestas que apontam para clientes. A direcção da aresta é representada por uma linha mais grossa no lado da cabeça da aresta.
 
 Uma das redes fornecida pelo professor pode ser vista na Figura~\ref{fig:SmallNetwork}, tal como gerada pelo programa.
-
 
 \begin{figure}[h]
 \centering
