@@ -233,16 +233,6 @@ while True:
 	findroute(orig, dest, (3,2,1), (orig,))
 	print "The elected route is", str(electedroute[0]) + " which is a " + str(path_type[electedroute[2]]) + "." if electedroute[0] else str(None) + "."
 
-	#route = []
-	#node = dest
-	#while node != orig:
-	#	route = [node] + route
-	#	node = graph[node]['via'][0]
-
-	#print "elec " + str(electedroute)
-	#print "current " + str([orig] + route)
-	#print "ELEC " + str(electedroute[0])
-
 	#pprint.pprint(graph)
 	#for i in graph:
 	#	for j in graph:
