@@ -123,38 +123,47 @@ def print_stats(paths_count, no_path):
 def stats():
 	global graph
 	nrnodes = len(graph)
-	local_pref = [[-1 for i in range(nrnodes)] for j in range(nrnodes)] # -1 will be considered -infinity
+	local_pref = [[None for i in range(nrnodes)] for j in range(nrnodes)] # None will be considered -infinity
 	next = [[None for i in range(nrnodes)] for j in range(nrnodes)] 
 	
 	index_map = dict(zip(graph.keys(), range(nrnodes))) # nodes aren't necessarily numbered from 0 to nrnodes
 		
 	for u in graph.keys():
+		print u, index_map[u]
 		local_pref[index_map[u]][index_map[u]] = 0
 		for relation in [1,2,3]:
 			for v in graph[u][relation]:
+				if u == v:
+					print "ALARM"
 				local_pref[index_map[u]][index_map[v]] = relation
+				
+	pprint.pprint(local_pref)			
 		
 	for k in range(nrnodes):
 		for i in range(nrnodes):
 			for j in range(nrnodes):
 				if min(local_pref[i][k], local_pref[k][j]) > local_pref[i][j]:
 					local_pref[i][j] = min(local_pref[i][k], local_pref[k][j])
+					# print "\nk i j"
+					# print k, i, j
+					# print "ij ik kj"
+					# print local_pref[i][j], local_pref[i][k], local_pref[k][j]
 					next[i][j] = k
 	
-	i = raw_input("i: ")
-	j = raw_input("j: ")
-	find_path(i,j, local_pref, next)				
+	pprint.pprint(local_pref)
+	pprint.pprint(next)
 	
+'''	
 def find_path(i,j, local_pref, next)
 	if local_pref[i][j] == -1
 		print "bad luck :("
-		return
+		return None
 	k = next[i][j]
 	if k == None:
-		return
+		return None
 	else 
 		return find_path(i,k,local_pref, next) + k + find_path(k,j,local_pref, next)
-		
+'''		
 	
 '''
 def stats():
