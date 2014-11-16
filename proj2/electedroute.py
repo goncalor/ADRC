@@ -70,75 +70,53 @@ def prompt():
 		exit()
 	return (orig, dest)
 
-	
+
+def getroute(orig, dest):
+	" returns the current route from orig to dest and the route type """
+	route = []
+	node_aux = dest
+	second_node = node_aux
+	while node_aux != orig:
+		second_node = node_aux
+		route = [node_aux] + route
+		node_aux = graph[node_aux]['via'][0]
+	return [[orig] + route, graph[second_node]['via'][1]]
+
+
 def findroute(orig, dest, explore, fringe):
 	""" finds routes from orig to dest and returns that route as a list.
 		returns None if no route exists connecting the nodes """
-	global graph
+	global graph, electedroute
 
-	print fringe
-
+	#print fringe
 	if not fringe:
 		return
-
 	newfringe = set()
 
 	for rel in explore:
 		for node in fringe:
 
 			if node == dest:
-				print "found it"
+				#print "FOUND IT"
+				route = getroute(orig, dest)
+				route_len = len(route[0])
+				#print route
+				if route_len != 0 and  route_len < electedroute[1] and route[1] > electedroute[2]:
+					electedroute[0] = list(route[0])
+					electedroute[1] = route_len
+					electedroute[2] = route[1]
+					#print "elec " + str(electedroute[0])
 
 			for neighbour in graph[node][rel]:
-				if graph[neighbour]['visited'] == False:
-					newfringe.add(neighbour)
-					graph[neighbour]['visited'] = True
+				if (rel == 1 and graph[neighbour]['visited'] != 1) or graph[neighbour]['visited'] == False:
+					graph[neighbour]['visited'] = rel
 					graph[neighbour]['via'] = [node, rel]
+					newfringe.add(neighbour)
 		if rel == 3 or rel == 2:
-			findroute(None, dest, (3,), set(newfringe))
+			findroute(orig, dest, (3,), set(newfringe))
 		else:
-			findroute(None, dest, (3, 2, 1), set(newfringe))
+			findroute(orig, dest, (3, 2, 1), set(newfringe))
 		newfringe.clear()
-
-
-	"""
-	fringe = []
-	fringe.append(orig)
-	graph[orig]['visited'] = 1 # orig is tagged as visited by a node that sees him as a provider to avoid any further searches
-	graph[orig]['via'] = [0, 1]	# orig reached via a node that sees him as a provider
-	newfringe = []
-
-	if orig == dest:
-		return [orig]
-
-	while fringe:	# while fringe is not empty
-		for node in fringe:
-			if graph[node]['via'][1] == 1: # if the node was reached by a node that sees him as a provider, share every connection with him
-				explore = [3, 2, 1]	# this order is important, clients, then peers and finally providers
-			else: # else, the node only gets money if the traffic is for one of his customers, share only those
-				explore = [3] 
-
-			for relation in explore:
-				for neighbour in graph[node][relation]:
-					if (relation == 1 and graph[neighbour]['visited'] != 1) or graph[neighbour]['visited'] == None:
-						graph[neighbour]['visited'] = relation
-						graph[neighbour]['via'] = [node, relation]
-						newfringe.append(neighbour)
-						if neighbour == dest:
-							route = []
-							node = dest
-							second_node = node
-							while node != orig:
-								second_node = node
-								route = [node] + route
-								node = graph[node]['via'][0]
-								
-							print "\n" + path_type[graph[second_node]['via'][1]]
-							return [orig] + route
-		fringe = list(newfringe)
-		newfringe = []
-	return None
-	"""
 
 
 def print_stats(paths_count, no_path):
@@ -251,16 +229,19 @@ print "\nPress Return twice to exit."
 while True:
 	orig, dest = prompt()
 	initgraph()
-	print "The elected route is " + str(findroute(None, dest, (3,2,1), (orig,)))
+	electedroute = [[], 1000, 0]	# route, route length, route type
+	findroute(orig, dest, (3,2,1), (orig,))
+	print "The elected route is " + str(electedroute[0] if electedroute[0] else str(None))
 
-	route = []
-	node = dest
-	while node != orig:
-		route = [node] + route
-		node = graph[node]['via'][0]
+	#route = []
+	#node = dest
+	#while node != orig:
+	#	route = [node] + route
+	#	node = graph[node]['via'][0]
 
-	print [orig] + route
-
+	#print "elec " + str(electedroute)
+	#print "current " + str([orig] + route)
+	#print "ELEC " + str(electedroute[0])
 
 	#pprint.pprint(graph)
 	#for i in graph:
