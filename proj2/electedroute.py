@@ -2,7 +2,7 @@ import sys
 import pprint
 import time
 
-path_type = {1:"Provider path", 2:"Peer path", 3: "Customer path"}
+path_type = {1:"provider path", 2:"peer path", 3: "customer path"}
 disable_stats = False
 graph = {}
 
@@ -231,7 +231,7 @@ while True:
 	initgraph()
 	electedroute = [[], 1000, 0]	# route, route length, route type
 	findroute(orig, dest, (3,2,1), (orig,))
-	print "The elected route is " + str(electedroute[0] if electedroute[0] else str(None))
+	print "The elected route is", str(electedroute[0]) + " which is a " + str(path_type[electedroute[2]]) + "." if electedroute[0] else str(None) + "."
 
 	#route = []
 	#node = dest
