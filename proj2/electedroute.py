@@ -46,7 +46,7 @@ def initgraph():
 	""" resets all edges to unused state """
 	global graph
 	for node in graph.values():
-		node['visited'] = None
+		node['visited'] = False
 
 def prompt():
 	""" prompts user to provide an origin and a destination """
@@ -71,11 +71,37 @@ def prompt():
 	return (orig, dest)
 
 	
-def findroute(orig, dest):
+def findroute(orig, dest, explore, fringe):
 	""" finds routes from orig to dest and returns that route as a list.
 		returns None if no route exists connecting the nodes """
 	global graph
 
+	print fringe
+
+	if not fringe:
+		return
+
+	newfringe = set()
+
+	for rel in explore:
+		for node in fringe:
+
+			if node == dest:
+				print "found it"
+
+			for neighbour in graph[node][rel]:
+				if graph[neighbour]['visited'] == False:
+					newfringe.add(neighbour)
+					graph[neighbour]['visited'] = True
+					graph[neighbour]['via'] = [node, rel]
+		if rel == 3 or rel == 2:
+			findroute(None, dest, (3,), set(newfringe))
+		else:
+			findroute(None, dest, (3, 2, 1), set(newfringe))
+		newfringe.clear()
+
+
+	"""
 	fringe = []
 	fringe.append(orig)
 	graph[orig]['visited'] = 1 # orig is tagged as visited by a node that sees him as a provider to avoid any further searches
@@ -112,6 +138,7 @@ def findroute(orig, dest):
 		fringe = list(newfringe)
 		newfringe = []
 	return None
+	"""
 
 
 def print_stats(paths_count, no_path):
@@ -224,7 +251,17 @@ print "\nPress Return twice to exit."
 while True:
 	orig, dest = prompt()
 	initgraph()
-	print "The elected route is " + str(findroute(orig, dest))
+	print "The elected route is " + str(findroute(None, dest, (3,2,1), (orig,)))
+
+	route = []
+	node = dest
+	while node != orig:
+		route = [node] + route
+		node = graph[node]['via'][0]
+
+	print [orig] + route
+
+
 	#pprint.pprint(graph)
 	#for i in graph:
 	#	for j in graph:
