@@ -127,22 +127,21 @@ def stats():
 	next = [[None for i in range(nrnodes)] for j in range(nrnodes)] 
 	
 	index_map = dict(zip(graph.keys(), range(nrnodes))) # nodes aren't necessarily numbered from 0 to nrnodes
+	allowed_routes = [[1,1,1],[None,None,2],[None,None,3]] # for each combination of route type ik and kj, indexing this gives you the resulting type of route
 		
 	for u in graph.keys():
 		print u, index_map[u]
 		local_pref[index_map[u]][index_map[u]] = 0
 		for relation in [1,2,3]:
 			for v in graph[u][relation]:
-				if u == v:
-					print "ALARM"
 				local_pref[index_map[u]][index_map[v]] = relation
 				
 	pprint.pprint(local_pref)			
 		
 	for k in range(nrnodes):
 		for i in range(nrnodes):
-			for j in range(nrnodes):
-				if min(local_pref[i][k], local_pref[k][j]) > local_pref[i][j]:
+			for j in range(nrnodes):													#relation 1		relation 2
+				if (min(local_pref[i][k], local_pref[k][j]) > local_pref[i][j]) and (allowed_routes[local_pref[i][k]-1][local_pref[k][j]-1] != None):
 					local_pref[i][j] = min(local_pref[i][k], local_pref[k][j])
 					# print "\nk i j"
 					# print k, i, j
@@ -152,90 +151,7 @@ def stats():
 	
 	pprint.pprint(local_pref)
 	pprint.pprint(next)
-	
-'''	
-def find_path(i,j, local_pref, next)
-	if local_pref[i][j] == -1
-		print "bad luck :("
-		return None
-	k = next[i][j]
-	if k == None:
-		return None
-	else 
-		return find_path(i,k,local_pref, next) + k + find_path(k,j,local_pref, next)
-'''		
-	
-'''
-def stats():
-	""" generates stats for the network in graph """
-	#global graph
-	fringe = []
-	newfringe = []
-	nrnodes = len(graph)
-	paths_count = {1:0, 2:0, 3:0}	# 1 - provider path, 2 - peer path, 3 - costumer path
-	no_path = 0
-	paths_graph = {}	# stores the path type each node is reached by
-	path_translation = {(1,1):1, (1,2):1, (1,3):1, (2,3):2, (3,3):3, (3,1):1, (3,2):2}	# the last two cases are used to lie to the origin
 
-	# populate paths_graph
-	for node in graph:		
-		paths_graph[node] = 0
-
-	curr_state = 0
-	start_time = time.time()
-
-	for orig in graph:
-		nr_unvisited = nrnodes
-
-		curr_state += 1
-		if curr_state % 100 == 0:
-			print str(curr_state) + " origins analysed" + "   (t = " + str(time.time() - start_time) + " s)"
-			print_stats(paths_count, no_path)
-			print
-
-		if (policy_connected == True) and (not graph[orig][2]) and (not graph[orig][3]):	# network is policy connected and orig has only providers
-			paths_count[1] += nrnodes - 1	# minus one to account for origin
-			continue	# all done for this orig
-
-		initgraph()
-		graph[orig]['visited'] = 1
-		graph[orig]['via'] = [0, 1]	# orig reached via a node that sees him as a provider
-		fringe.append(orig)
-
-		paths_graph[orig] = 3 # lie: origin has costumer route
-
-		while fringe:	# while fringe is not empty
-			for node in fringe:
-				if graph[node]['via'][1] == 1:
-					explore = [3, 2, 1]	# this order is important
-				else:
-					explore = [3]
-
-				for relation in explore:
-					for neighbour in graph[node][relation]:
-						if (relation == 1 and graph[neighbour]['visited'] != 1) or graph[neighbour]['visited'] == None:
-
-							paths_graph[neighbour] = path_translation[(paths_graph[node], relation)]
-							if graph[neighbour]['visited'] == None:
-								nr_unvisited -= 1
-								#print orig, node, neighbour
-								paths_count[paths_graph[neighbour]] += 1
-
-							graph[neighbour]['visited'] = relation
-							graph[neighbour]['via'] = [node, relation]
-							newfringe.append(neighbour)
-							#print orig, node, neighbour, paths_graph, paths_count
-							#pprint.pprint(graph)
-
-			fringe = list(newfringe)
-			newfringe = []
-		no_path += nr_unvisited - 1	# minus one to account for origin
-
-	print "\n-- Network stats --"
-	if (paths_count[1]+paths_count[2]+paths_count[3]+no_path) > ((nrnodes-1) * nrnodes):
-		print "\n\tI AM WRONG!\n"
-	print_stats(paths_count, no_path)
-'''
 
 def test_policy_connection():
 	""" tests if a network is policy connected.
