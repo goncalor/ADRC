@@ -9,6 +9,9 @@
 \usepackage[portuguese]{algorithm2e}
 \usepackage{comment}
 \usepackage{hyperref}
+\usepackage{listings}
+\usepackage{lstautogobble}
+\usepackage[margin=2.5cm]{geometry}
 
 \makeatletter	% let the hacks begin
 \newcommand{\nosemic}{\renewcommand{\@endalgocfline}{\relax}}	% Drop semi-colon ;
@@ -21,16 +24,79 @@
 \input{./rosto.tex}
 \pagebreak
 
-
 \section{Procura de Rota AS-AS}
+O primeiro problema que nos é colocado é encontrar a rota que um sistema autónomo (AS) usa para chegar a outro. As únicas rotas possíveis são de um de três tipos: \textit{provider path}, \textit{peer path} ou \textit{costumer path}. Um AS prefere sempre uma rota de cliente a uma de par, uma de par a uma de fornecedor e uma de cliente a uma de fornecedor.
+
+Pensámos e implementamos diversos algoritmos. Começámos por implementar um algoritmo DFS (depth-first search) que descobria todos as rotas permitidas da origem para o destino e após isso transformava as rotas numa string de 1's, 2's e 3's que eram depois ordenadas lexicograficamente de forma a descobrir qual a rota mais vantajosa em termos de tipo em termos de tipo de caminho usado, tamanho do caminho e número de nós de cada tipo existentes no caminho. Embora esta solução funcionasse perfeitamente notámos que era computacionalmente dispendiosa pelo que decidimos descobrir um melhor algoritmo.
+
+Pensámos então em implementar o algoritmo de procura com base numa BFS (breadth-first search) com restrições. Com uma BFS quando o algoritmo chega ao nó de destino sabemos que o caminho descoberto tem seguramente o caminho mínimo. No entanto devido às restrições impostas pelos tipo de caminhos que são permitidos traz alguns problemas. Veja-se por exemplo a rede da Figura~\ref{fig:11}. Considere-se que corremos uma BFS com a restrição de que um nó a que se tenha chegado através de um fornecedor não pode explorar os seus fornecedores. Neste caso se tivermos o nó 4 como origem e 1 como destino o que se ocorre é que 4 encontra 3 e 2, que marca como usados. 2 não pode continuar para 1 e 3 já está usado. Quando 3 tenta usar 2 para chegar a 1 (o que é legítimo) vê que 2 já está marcado e portanto para e 1 não é encontrado. Ou seja a BFS restringida a seguir apenas caminhos válidos e nós não visitados pode não encontrar o destino quando efectivamente existe uma rota válida.
+
+A nossa solução final é baseada numa BFS mas que não é tão \textit{greedy}. O algoritmo pode ser implementado recursivamente e a ideia base é um nó visitar primeiro todos os seus caminhos de cliente, depois todos os seus caminhos de par e por fim todos os seus caminhos de fornecedor, sendo que cada nó é usado apenas uma vez. O algoritmo é apresentado em mais pormenor no Algoritmo~\ref{algo:findroute}.
+
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.5]{11}
+\caption{grafo do ficheiro 11.txt}
+\label{fig:11}
+\end{figure}
+
+
+\begin{algorithm}
+\begin{lstlisting}
+fringe = origin
+findroute(dest, explore, fringe):
+
+  if fringe is empty:
+    return
+
+  new_fringe = {}
+
+  for each relation in explore:
+    for each node in fringe:
+
+      if node == dest:
+        if this route is best than the elected route:
+          elect this route
+
+      for each neighbout who has relation:
+        if neighbour is unvisited
+              or node is a provider
+              and has not been more than once:
+          mark neighbour as is visted from a node
+              who has relation to it
+          neighbour has been visited by node
+          add neighbour to new_fringe
+    if relation is provider:
+      findroute(dest, {costumers, peers, providers},
+                new_fringe)
+    else:
+      findroute(dest, {costumers}, new_fringe)
+    new_fringe = {}
+
+\end{lstlisting}
+\caption{algoritmo que encontra a melhor rota AS-AS}
+\label{algo:findroute}
+\end{algorithm}
+
 
 \section{Estatísticas da Rede}
 
 \section{Redes \textit{Policy Connected}}
 
 \section{Visualizador de Grafos}
+Ao longo deste projecto criámos alguns grafos para melhor podermos testar as várias partes do projecto. De forma a podermos visualizar mais facilmente os grafos criados desenvolvemos em Python um \textit{script} que dado um ficheiro que descreve uma rede cria uma representação gráfica dessa rede.
+
+Nos grafos criados por este programa os nós Tier-1 são marcados a vermelho e os nós que não têm nem pares nem clientes são marcados a verde. Os restantes nós são marcados a branco. A preto são desenhadas as arestas que indicam relações de pares e a verde as arestas que apontam para clientes. A direcção da aresta é representada por uma linha mais grossa no lado da cabeça da aresta.
+
+Uma das redes fornecida pelo professor pode ser vista na Figura~\ref{fig:SmallNetwork}, tal como gerada pelo programa.
 
 
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.6]{SmallNetwork}
+\caption{figura criada automaticamente a partir de SmallNetwork.txt}
+\label{fig:SmallNetwork}
+\end{figure}
 
 
 \end{document}

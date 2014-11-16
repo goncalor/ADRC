@@ -112,10 +112,10 @@ def findroute(orig, dest, explore, fringe):
 					graph[neighbour]['visited'] = rel
 					graph[neighbour]['via'] = [node, rel]
 					newfringe.add(neighbour)
-		if rel == 3 or rel == 2:
-			findroute(orig, dest, (3,), set(newfringe))
-		else:
+		if rel == 1:
 			findroute(orig, dest, (3, 2, 1), set(newfringe))
+		else:
+			findroute(orig, dest, (3,), set(newfringe))
 		newfringe.clear()
 
 
