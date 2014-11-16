@@ -120,7 +120,43 @@ def print_stats(paths_count, no_path):
 	print "Costumer paths: " + str(paths_count[3])
 	print "Not connected : " + str(no_path)
 
-
+def stats():
+	global graph
+	nrnodes = len(graph)
+	local_pref = [[-1 for i in range(nrnodes)] for j in range(nrnodes)] # -1 will be considered -infinity
+	next = [[None for i in range(nrnodes)] for j in range(nrnodes)] 
+	
+	index_map = dict(zip(graph.keys(), range(nrnodes))) # nodes aren't necessarily numbered from 0 to nrnodes
+		
+	for u in graph.keys():
+		local_pref[index_map[u]][index_map[u]] = 0
+		for relation in [1,2,3]:
+			for v in graph[u][relation]:
+				local_pref[index_map[u]][index_map[v]] = relation
+		
+	for k in range(nrnodes):
+		for i in range(nrnodes):
+			for j in range(nrnodes):
+				if min(local_pref[i][k], local_pref[k][j]) > local_pref[i][j]:
+					local_pref[i][j] = min(local_pref[i][k], local_pref[k][j])
+					next[i][j] = k
+	
+	i = raw_input("i: ")
+	j = raw_input("j: ")
+	find_path(i,j, local_pref, next)				
+	
+def find_path(i,j, local_pref, next)
+	if local_pref[i][j] == -1
+		print "bad luck :("
+		return
+	k = next[i][j]
+	if k == None:
+		return
+	else 
+		return find_path(i,k,local_pref, next) + k + find_path(k,j,local_pref, next)
+		
+	
+'''
 def stats():
 	""" generates stats for the network in graph """
 	#global graph
@@ -190,7 +226,7 @@ def stats():
 	if (paths_count[1]+paths_count[2]+paths_count[3]+no_path) > ((nrnodes-1) * nrnodes):
 		print "\n\tI AM WRONG!\n"
 	print_stats(paths_count, no_path)
-
+'''
 
 def test_policy_connection():
 	""" tests if a network is policy connected.
