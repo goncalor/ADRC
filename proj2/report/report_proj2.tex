@@ -9,9 +9,10 @@
 \usepackage[portuguese]{algorithm2e}
 \usepackage{comment}
 \usepackage{hyperref}
+\usepackage[all]{hypcap}
 \usepackage{listings}
 \usepackage{lstautogobble}
-\usepackage[margin=2.5cm]{geometry}
+\usepackage[margin=2.2cm]{geometry}
 
 \makeatletter	% let the hacks begin
 \newcommand{\nosemic}{\renewcommand{\@endalgocfline}{\relax}}	% Drop semi-colon ;
@@ -29,11 +30,11 @@ O primeiro problema que nos é colocado é encontrar a rota que um sistema autó
 
 Pensámos e implementámos diversos algoritmos. Começámos por implementar um algoritmo DFS (depth-first search) que descobria todas as rotas permitidas da origem para o destino e após isso transformava as rotas numa string de 1's, 2's e 3's que eram depois ordenadas lexicograficamente de forma a descobrir qual a rota mais vantajosa em termos de tipo de caminho usado, tamanho do caminho e número de nós de cada tipo existentes no caminho. Embora esta solução funcionasse perfeitamente notámos que era computacionalmente dispendiosa pelo que decidimos descobrir um melhor algoritmo.
 
-Pensámos então em implementar o algoritmo de procura com base numa BFS (breadth-first search) com restrições. Com uma BFS quando o algoritmo chega ao nó de destino sabemos que o caminho descoberto tem seguramente o caminho mínimo. No entanto devido às restrições impostas pelo tipo de caminhos que são permitidos traz alguns problemas. Veja-se por exemplo a rede da Figura~\ref{fig:11}. Considere-se que corremos uma BFS com a restrição de que um nó a que se tenha chegado através de um fornecedor não pode explorar os seus fornecedores. Neste caso se tivermos o nó 4 como origem e 1 como destino o que ocorre é que 4 encontra 3 e 2, que marca como usados. 2 não pode continuar para 1 e 3 já está usado. Quando 3 tenta usar 2 para chegar a 1 (o que é legítimo) vê que 2 já está marcado e portanto pára e 1 não é encontrado. Ou seja a BFS restringida a seguir apenas caminhos válidos e nós não visitados pode não encontrar o destino quando efectivamente existe uma rota válida.
+Pensámos então em implementar o algoritmo de procura com base numa BFS (breadth-first search) com restrições. Com uma BFS quando o algoritmo chega ao nó de destino sabemos que o caminho descoberto tem seguramente o comprimento mínimo. No entanto devido às restrições impostas pelo tipo de caminhos que são permitidos traz alguns problemas. Veja-se por exemplo a rede da Figura~\ref{fig:11}. Considere-se que corremos uma BFS com a restrição de que um nó a que se tenha chegado através de um fornecedor não pode explorar os seus fornecedores. Neste caso se tivermos o nó 4 como origem e 1 como destino o que ocorre é que 4 encontra 3 e 2, que marca como usados. 2 não pode continuar para 1 e 3 já está usado. Quando 3 tenta usar 2 para chegar a 1 (o que é legítimo) vê que 2 já está marcado e portanto pára e 1 não é encontrado. Ou seja a BFS restringida a seguir apenas caminhos válidos e nós não visitados pode não encontrar o destino quando efectivamente existe uma rota válida.
 
 A nossa solução final é baseada numa BFS mas que não é tão \textit{greedy}. O algoritmo pode ser implementado recursivamente e a ideia base é um nó visitar primeiro todos os seus caminhos de cliente, depois todos os seus caminhos de par e por fim todos os seus caminhos de fornecedor, sendo que cada nó é usado apenas uma vez. O algoritmo é apresentado em mais pormenor no Algoritmo~\ref{algo:findroute}.
 
-Note-se que o algoritmo não pode parar mal chegue à origem porque não é garantido que o melhor caminho seja o primeiro a ser descoberto. Para além disso há que notar que para evitar o problema de um nó ser marcado como inutilizável quando ainda vai ser preciso para chegar ao destino passámos a marcar o nó como inutilizável apenas quando é visitado por um cliente.
+Note-se que o algoritmo não pode parar mal chegue ao destino porque não é garantido que o melhor caminho seja o primeiro a ser descoberto. Para além disso há que notar que para evitar o problema de um nó ser marcado como inutilizável quando ainda vai ser preciso para chegar ao destino passámos a marcar o nó como inutilizável apenas quando é visitado por um cliente.
 
 \begin{figure}[h]
 \centering
@@ -42,9 +43,13 @@ Note-se que o algoritmo não pode parar mal chegue à origem porque não é gara
 \label{fig:11}
 \end{figure}
 
-\begin{algorithm}
+
+\lstset{emph={new_fringe, relation, neighbour, relation, node, explore, fringe, dest}, emphstyle=\itshape} 
+\begin{algorithm}[H]
+\caption{algoritmo que encontra a melhor rota AS-AS}
+\label{algo:findroute}
 \begin{lstlisting}
-fringe = origin
+fringe = {origin}
 findroute(dest, explore, fringe):
 
   if fringe is empty:
@@ -59,14 +64,14 @@ findroute(dest, explore, fringe):
         if this route is best than the elected route:
           elect this route
 
-      for each neighbout who has relation:
+      for each neighbour who has relation:
         if neighbour is unvisited
-              or (node is a provider
+              or (neighbour is a provider
               and has not been visited as a provider):
-          mark neighbour as is visited from a node
+          mark neighbour as visited by node,
               who has relation to it
-          neighbour has been visited by node
           add neighbour to new_fringe
+
     if relation is provider:
       findroute(dest, {costumers, peers, providers},
                 new_fringe)
@@ -74,22 +79,25 @@ findroute(dest, explore, fringe):
       findroute(dest, {costumers}, new_fringe)
     new_fringe = {}
 \end{lstlisting}
-\caption{algoritmo que encontra a melhor rota AS-AS}
-\label{algo:findroute}
+
 \end{algorithm}
 
 
 \section{Estatísticas da Rede}
-Nesta parte o objectivo é fazer um programa que recolha estatísticas de uma rede, nomeadamente que conte o número de caminhos de cada um dos três tipos. Para resolver este problema estudámos vários algoritmos nas esperança de que algum resultasse num implementação mais eficiente do que correr N vezes o Algoritmo~\ref{algo:findroute}. No entanto, não encontrámos uma solução melhor do que essa. Ainda assim notámos uma optimização que pode ser feita: quando uma rede é policy connected temos certeza de que um nó consegue chegar a todos os outros nós. Sendo assim, numa rede policy connected um nó que não tenha nem clientes nem pares garantidamente conseguem chegar a todos os outros nós por meio de caminhos de fornecedor. Isso faz com que quando se encontra um nó nestas condições não seja necessário correr o Algoritmo~\ref{algo:findroute}. Por falta de tempo não foi possível chegar a um algoritmo satisfatório para gerar as estatísticas, o actual tem problemas com internets que contenham ciclos (embora em principio esta topologia não aconteça no mundo real). Usar o algoritmo da parte 1 daria os resultados correctos para qualquer topologia mas ao custo de um grande aumento na complexidade. Foi também tentada uma implementação do algoritmo de Floyd-Warshal adaptado para calcular os caminhos mais "largos" (em que rotas por clientes seriam consideradas mais largas que rotas por peers ou providers e por peers mais largas que por providers) e embora funcionasse e tivesse uma complexidade excelente para o problema, a criação da matriz de dimensões N*N para as maiores internets fornecidas pelo professor atingiam o limite de memória e portanto tornava o algoritmo inutilizável.
+Nesta parte o objectivo é fazer um programa que recolha estatísticas de uma rede, nomeadamente que conte o número de caminhos de cada um dos três tipos. Para resolver este problema estudámos vários algoritmos na esperança de que algum resultasse num implementação mais eficiente do que correr N vezes o Algoritmo~\ref{algo:findroute}. No entanto, não encontrámos uma solução significativamente melhor do que essa. Ainda assim notámos uma optimização que pode ser feita: quando uma rede é policy connected temos certeza de que um nó consegue chegar a todos os outros nós. Sendo assim, numa rede policy connected um nó que não tenha nem clientes nem pares garantidamente consegue chegar a todos os outros nós por meio de caminhos de fornecedor. Isso faz com que quando se encontra um nó nestas condições não seja necessário correr o Algoritmo~\ref{algo:findroute}.
 
+Por falta de tempo não foi possível chegar a uma implementação satisfatória para gerar as estatísticas, a actual tem problemas com redes que contenham ciclos (embora em princípio esta topologia não aconteça no mundo real). Usar o Algoritmo~\ref{algo:findroute} daria os resultados correctos para qualquer topologia mas ao custo de um grande aumento na complexidade. Foi também tentada uma implementação do algoritmo de Floyd-Warshal adaptado para calcular os caminhos mais ``largos'' (em que rotas por clientes seriam consideradas mais largas que rotas por pares ou fornecedores e por pares mais largas que por fornecedores) e embora funcionasse e tivesse uma complexidade boa para o problema, a criação da matriz de dimensões N$\times$N para as maiores redes fornecidas pelo professor atingiam o limite de memória e portanto tornava o algoritmo inutilizável.
 
 
 \section{Redes \textit{Policy Connected}}
-Uma rede \textit{policy connected} é uma em que cada nó tem uma rota legal para todos os outros. Um nó tem sempre uma rota legal para os seus clientes e para os clientes dos seus pares. Facilmente se percebe que para que haja uma rota legal de cada nó para todos os outros é preciso que os nós Tier-1 estejam ligados por entre si (por relações de par). Sendo assim é fácil escrever um algoritmo que verifique se a rede é policy connected. Esse algoritmo é o Algoritmo~\ref{algo:testpolicy}.
+Uma rede \textit{policy connected} é uma em que cada nó tem uma rota legal para todos os outros. Um nó tem sempre uma rota legal para os seus clientes e para os clientes dos seus pares. Facilmente se percebe que para que haja uma rota legal de cada nó para todos os outros é preciso que os nós Tier-1 estejam ligados entre si (por relações de par). Sendo assim é fácil escrever um algoritmo que verifique se a rede é policy connected. Esse algoritmo é o Algoritmo~\ref{algo:testpolicy}.
 
+\lstset{emph={tier1, node, graph}, emphstyle=\itshape}
 \begin{algorithm}
+\caption{algoritmo que verifica se uma rede é policy connected}
+\label{algo:testpolicy}
 \begin{lstlisting}
-is_policy_connected():
+is_policy_connected(graph):
   tier1 = {}
 
   for each node in graph:
@@ -97,13 +105,11 @@ is_policy_connected():
       add node to tier1
 
   for each node in tier1:
-    if tier1 is in {node.peers} union with {node}
-      return is not policy connected
+    if tier1 is not in {node.peers} union with {node}
+      return False
 
-  return is policy connected
+  return True
 \end{lstlisting}
-\caption{algoritmo verifica se uma rede é policy connected}
-\label{algo:testpolicy}
 \end{algorithm}
 
 

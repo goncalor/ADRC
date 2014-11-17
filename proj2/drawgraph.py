@@ -43,7 +43,7 @@ def loadgraph():
 
 
 def draw_graph(graph):
-
+	""" prepares the graph to be shown or exported """
 	G = nx.DiGraph()
 	G.add_nodes_from(graph.keys())
 
