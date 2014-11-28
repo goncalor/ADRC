@@ -1,5 +1,6 @@
 import sys
 from pprint import pprint
+import copy
 
 def check_args():
 	""" checks if a file was supplied to the script """
@@ -35,6 +36,8 @@ def loadgraph(filename):
 		if tail not in graph:	# let us add a new node
 			graph[tail] = set()
 		graph[tail].add(head)	# tail can get to head
+		if head not in graph:
+			graph[head] = set()
 	f.close()	# close the file
 	return graph
 
@@ -55,16 +58,67 @@ def prompt():
 	if src not in graph:
 		print "No node " + str(src) + " in graph."
 		exit()
-	elif dest not in graph:
+	if dest not in graph:
 		print "No node " + str(dest) + " in graph."
 		exit()
 	return (src, dest)
 
 
-def count_disjoint(src, dest):
-	pass
+def count_disjoint(graph, src, dest):
+
+	if src == dest:
+		return 1	# 0 ?
+
+	graph = copy.deepcopy(graph)	# change graph only in this scope
+	visited = {}
+
+	for node in graph:
+		visited[node] = (False, None)
+
+	# all disjoint paths have been found when we can't find dest anymore
+	nr_disjoint = -1
+	dest_found = True
+	while dest_found:
+		dest_found = False
+		nr_disjoint += 1
+		fringe = set([src])
+		newfringe = set()
+
+		# all nodes not visited
+		for node in graph:
+			visited[node] = (False, None)
+
+		# do a BFS to find dest
+		while fringe:
+			for node in fringe:
+				if node == dest:
+					dest_found = True
+					fringe = set()	# breaks the while loop
+					break
+
+				for neighbour in graph[node]:
+					if not visited[neighbour][0]:
+						newfringe.add(neighbour)
+						visited[neighbour] = (True, node)
+
+			fringe = set(newfringe)
+			newfringe = set()
+
+		# backtrace from dest to scr and invert edges
+		if dest_found:
+			node = dest
+			while node != src:
+				via = visited[node][1]
+				graph[node].add(via)
+				graph[via].remove(node)
+				node = via
+
+	return nr_disjoint
 
 
 check_args()
 graph = loadgraph(sys.argv[1])
 #pprint(graph)
+while True:
+	src, dest = prompt()
+	print "No. of disjoint paths: " + str(count_disjoint(graph, src, dest))

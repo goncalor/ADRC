@@ -2,7 +2,6 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import sys
 
-graph = {}
 no_show = False
 
 def check_args():
@@ -73,4 +72,3 @@ plt.axis('off')
 plt.savefig(sys.argv[1] + ".png")
 if not no_show:
 	plt.show()
-
