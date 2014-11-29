@@ -67,7 +67,7 @@ def prompt():
 def count_disjoint(graph, src, dest):
 
 	if src == dest:
-		return 1	# 0 ?
+		return 0	# 0 ?
 
 	graph = copy.deepcopy(graph)	# change graph only in this scope
 	visited = {}
@@ -115,10 +115,26 @@ def count_disjoint(graph, src, dest):
 
 	return nr_disjoint
 
+def k_distribution(graph):
+	
+	separated_by = {} # k indexes the dictionary. separated_by[k] = number of pairs of nodes that get separeted if k links fail
+		
+		for nodeA in graph:
+			for nodeB in graph:
+				if nodeA != nodeB:
+					current_k = count_disjoint(graph, nodeA, nodeB)
+					if current_k != 0:
+						try:
+							separated_by[current_k] += 1
+						except KeyError, err:
+							separated_by[current_k] = 1
+	
+	print separated_by
 
 check_args()
 graph = loadgraph(sys.argv[1])
 #pprint(graph)
+k_distribution(graph)
 while True:
 	src, dest = prompt()
 	print "No. of disjoint paths: " + str(count_disjoint(graph, src, dest))
