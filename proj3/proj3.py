@@ -119,15 +119,15 @@ def k_distribution(graph):
 	
 	separated_by = {} # k indexes the dictionary. separated_by[k] = number of pairs of nodes that get separeted if k links fail
 		
-		for nodeA in graph:
-			for nodeB in graph:
-				if nodeA != nodeB:
-					current_k = count_disjoint(graph, nodeA, nodeB)
-					if current_k != 0:
-						try:
-							separated_by[current_k] += 1
-						except KeyError, err:
-							separated_by[current_k] = 1
+	for nodeA in graph:
+		for nodeB in graph:
+			if nodeA != nodeB:
+				current_k = count_disjoint(graph, nodeA, nodeB)
+				if current_k != 0:
+					try:
+						separated_by[current_k] += 1
+					except KeyError, err:
+						separated_by[current_k] = 1
 	
 	print separated_by
 
