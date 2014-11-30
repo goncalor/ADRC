@@ -129,12 +129,27 @@ def k_distribution(graph):
 					except KeyError, err:
 						separated_by[current_k] = 1
 	
-	print separated_by
+	return separated_by
+
+def link_connectivity(separated_by):
+	min_k = min(separated_by)
+	for nodeA in graph:
+		for nodeB in graph:
+			if nodeA != nodeB:
+				if count_disjoint(graph, nodeA, nodeB) == min_k:
+					if min_k > 1:
+						print str(min_k) + " broken links are enough for the network to become disconnected"
+						print "for example: " + str(nodeA) + " and " + str(nodeB) + " can be separated by only " + str(min_k) + " broken links"
+					else:
+						print str(min_k) + " broken link is enough for the network to become disconnected"
+						print "for example: " + str(nodeA) + " and " + str(nodeB) + " can be separated by only " + str(min_k) + " broken link"
+					return 
 
 check_args()
 graph = loadgraph(sys.argv[1])
 #pprint(graph)
-k_distribution(graph)
+separated_by = k_distribution(graph)
+link_connectivity(separated_by)
 while True:
 	src, dest = prompt()
 	print "No. of disjoint paths: " + str(count_disjoint(graph, src, dest))
