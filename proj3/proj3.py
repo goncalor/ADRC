@@ -8,8 +8,8 @@ def check_args():
 		print "Usage: python " + sys.argv[0] + " <internet_file> [--disable-stats]\n"
 		exit()
 	elif len(sys.argv) == 3 and sys.argv[2] == "--disable-stats":
-		global disable_stats
-		disable_stats = True
+		return True
+	return False
 
 def loadgraph(filename):
 	""" loads the graph from a file into memory """
@@ -63,8 +63,7 @@ def prompt():
 		exit()
 	return (src, dest)
 
-
-def count_disjoint(graph, src, dest):
+def count_disjoint(graph, src, dest): # Edmond Karp
 
 	if src == dest:
 		return 0	# 0 ?
@@ -115,7 +114,7 @@ def count_disjoint(graph, src, dest):
 
 	return nr_disjoint
 
-def k_distribution(graph):
+def k_distribution(graph, disable_stats):
 	
 	separated_by = {} # k indexes the dictionary. separated_by[k] = number of pairs of nodes that get separeted if k links fail
 		
@@ -129,27 +128,56 @@ def k_distribution(graph):
 					except KeyError, err:
 						separated_by[current_k] = 1
 	
+	if not disable_stats: 
+		print_statistics(separated_by, len(graph)*(len(graph)-1))
 	return separated_by
 
-def link_connectivity(separated_by):
-	min_k = min(separated_by)
+def print_statistics(separated_by, number_of_connections):
+	total_failures = 0
+	total_connections = 0
+	
+	for k in separated_by:
+		total_connections += separated_by[k]
+
+	for k in separated_by:
+		total_failures += separated_by[k]
+		if k == 1:
+			print str(total_failures) + "/" + str(total_connections) + "\tconnections can fail if " + str(k) + " link fails." + " Still connected: " + '|' * ((total_connections) - total_failures)
+		else:
+			print str(total_failures) + "/" + str(total_connections) + "\tconnections can fail if " + str(k) + " links fail." + " Still connected: " + '|' * ((total_connections) - total_failures)
+	print
+
+def link_connectivity(graph):
+	min_k = None
 	for nodeA in graph:
 		for nodeB in graph:
 			if nodeA != nodeB:
-				if count_disjoint(graph, nodeA, nodeB) == min_k:
-					if min_k > 1:
-						print str(min_k) + " broken links are enough for the network to become disconnected"
-						print "for example: " + str(nodeA) + " and " + str(nodeB) + " can be separated by only " + str(min_k) + " broken links"
-					else:
-						print str(min_k) + " broken link is enough for the network to become disconnected"
-						print "for example: " + str(nodeA) + " and " + str(nodeB) + " can be separated by only " + str(min_k) + " broken link"
-					return 
+				k = count_disjoint(graph, nodeA, nodeB)
+				if k == 1:
+					print "1 broken link is enough for the network to become disconnected"
+					print "for example: " + str(nodeA) + " can be separated from " + str(nodeB) + " by only 1 broken link"
+					return
+				else:
+					if k == 0:
+						print "The graph is already disconnected"
+						return
+					if k < min_k or min_k == None:
+						min_k = k
+						exampleA = nodeA
+						exampleB = nodeB
+	
+	if min_k == None:
+		print "The graph has only one node and therefore cannot become disconnected"
+		return
+	print str(min_k) + " broken links are enough for the network to become disconnected"
+	print "for example: " + str(exampleA) + " can be separated from " + str(exampleB) + " by only " + str(min_k) + " broken links"
+	return
 
-check_args()
+disable_stats = check_args()
 graph = loadgraph(sys.argv[1])
 #pprint(graph)
-separated_by = k_distribution(graph)
-link_connectivity(separated_by)
+k_distribution(graph, disable_stats)
+link_connectivity(graph)
 while True:
 	src, dest = prompt()
 	print "No. of disjoint paths: " + str(count_disjoint(graph, src, dest))
