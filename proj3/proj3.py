@@ -11,6 +11,7 @@ def check_args():
 		return True
 	return False
 
+
 def loadgraph(filename):
 	""" loads the graph from a file into memory """
 
@@ -41,6 +42,7 @@ def loadgraph(filename):
 	f.close()	# close the file
 	return graph
 
+
 def prompt():
 	""" prompts user to provide an origin and a destination """
 	src = raw_input("\nSource: ")
@@ -63,6 +65,7 @@ def prompt():
 		exit()
 	return (src, dest)
 
+
 def count_disjoint(graph, src, dest): # Edmond Karp
 
 	if src == dest:
@@ -73,6 +76,7 @@ def count_disjoint(graph, src, dest): # Edmond Karp
 
 	for node in graph:
 		visited[node] = (False, None)
+
 
 	# all disjoint paths have been found when we can't find dest anymore
 	nr_disjoint = -1
@@ -114,6 +118,7 @@ def count_disjoint(graph, src, dest): # Edmond Karp
 
 	return nr_disjoint
 
+
 def k_distribution(graph, disable_stats):
 	
 	separated_by = {} # k indexes the dictionary. separated_by[k] = number of pairs of nodes that get separeted if k links fail
@@ -129,23 +134,32 @@ def k_distribution(graph, disable_stats):
 						separated_by[current_k] = 1
 	
 	if not disable_stats: 
-		print_statistics(separated_by, len(graph)*(len(graph)-1))
+		print_statistics(separated_by)
 	return separated_by
 
-def print_statistics(separated_by, number_of_connections):
-	total_failures = 0
+
+def print_statistics(separated_by):
 	total_connections = 0
+	total_failures = 0
+	try: 
+		max_k = max(separated_by)
+	except ValueError:
+		return # if the graph has only one node this will fail and link_connectivity() already has an apropriate print
 	
-	for k in separated_by:
+	for k in separated_by: # count the total number of connections that exist by adding all the values of the dictionary
 		total_connections += separated_by[k]
 
-	for k in separated_by:
-		total_failures += separated_by[k]
-		if k == 1:
-			print str(total_failures) + "/" + str(total_connections) + "\tconnections can fail if " + str(k) + " link fails." + " Still connected: " + '|' * ((total_connections) - total_failures)
+	for k in range(1, max_k+1): # print all values of k until the maximum one, not only the values that make new connections fail
+		try:
+			total_failures += separated_by[k]
+		except KeyError:
+			pass	# if, for example, k=3 added no new failures, separated_by[3] does not exist so we ignore the KeyError
+		
+		if k == 1: 
+			print "k=" + str(k) + ': ' + str(total_failures) + "/" + str(total_connections) + " connections fail." + "\tStill connected: " + '|' * ((total_connections) - total_failures)
 		else:
-			print str(total_failures) + "/" + str(total_connections) + "\tconnections can fail if " + str(k) + " links fail." + " Still connected: " + '|' * ((total_connections) - total_failures)
-	print
+			print "k=" + str(k) + ': ' + str(total_failures) + "/" + str(total_connections) + " connections fail." + "\tStill connected: " + '|' * ((total_connections) - total_failures)
+	print "(run with argument [--disable-stats] to supress the prints above)\n"
 
 def link_connectivity(graph):
 	min_k = None
@@ -172,6 +186,8 @@ def link_connectivity(graph):
 	print str(min_k) + " broken links are enough for the network to become disconnected"
 	print "for example: " + str(exampleA) + " can be separated from " + str(exampleB) + " by only " + str(min_k) + " broken links"
 	return
+
+
 
 disable_stats = check_args()
 graph = loadgraph(sys.argv[1])
