@@ -145,7 +145,7 @@ def statistics(graph, disable_stats):
 						separated_by[current_k] += 1
 					except KeyError, err:
 						separated_by[current_k] = 1 # create new dictionary entries only has needed, instead of initializing a large number of possible indexes
-		break
+		
 	if not disable_stats: 
 		print_statistics(separated_by)
 

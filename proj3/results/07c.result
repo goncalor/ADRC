@@ -1,5 +1,5 @@
-k=1: 0/6 existing connections fail.	Still connected: ||||||
-k=2: 0/6 existing connections fail.	Still connected: ||||||
-k=3: 6/6 existing connections fail.	Still connected: 
+k=1: 0/36 existing connections fail.	Still connected: ||||||||||||||||||||||||||||||||||||
+k=2: 30/36 existing connections fail.	Still connected: ||||||
+k=3: 36/36 existing connections fail.	Still connected: 
 
 The graph is already disconnected, 1 can't connect to 0

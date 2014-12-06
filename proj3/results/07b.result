@@ -1,6 +1,6 @@
-k=1: 0/6 existing connections fail.	Still connected: ||||||
-k=2: 0/6 existing connections fail.	Still connected: ||||||
-k=3: 6/6 existing connections fail.	Still connected: 
+k=1: 0/42 existing connections fail.	Still connected: ||||||||||||||||||||||||||||||||||||||||||
+k=2: 0/42 existing connections fail.	Still connected: ||||||||||||||||||||||||||||||||||||||||||
+k=3: 42/42 existing connections fail.	Still connected: 
 
 3 broken links are enough for the network to become disconnected
 for example: 0 can be separated from 1 by only 3 broken links
