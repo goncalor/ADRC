@@ -3,7 +3,7 @@ import sys
 import glob
 import filecmp
 
-files = list(set(glob.glob("graphs/*")) - set(glob.glob("graphs/*.png")))
+files = list(set(glob.glob("graphs/*")) - set(glob.glob("graphs/*.png")) - set(glob.glob("graphs/*.exclude")))
 prefix_lenght = len("graphs/")
 
 for i, val in enumerate(files):
