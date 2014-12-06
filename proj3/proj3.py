@@ -4,12 +4,25 @@ import copy
 
 def check_args():
 	""" checks if a file was supplied to the script """
-	if len(sys.argv) < 2:
-		print "Usage: python " + sys.argv[0] + " <internet_file> [--disable-stats]\n"
+	disable_stats = False
+	disable_prompt = False
+	
+	if len(sys.argv) < 2 or len(sys.argv) > 4:
+		print "Usage: python " + sys.argv[0] + " <internet_file> [--disable-stats] [--disable-prompt]\n"
 		exit()
-	elif len(sys.argv) == 3 and sys.argv[2] == "--disable-stats":
-		return True
-	return False
+		
+	else:
+		if len(sys.argv) >= 3:
+			if sys.argv[2] == "--disable-stats":
+				disable_stats = True
+			if sys.argv[2] == "--disable-prompt":
+				disable_prompt = True
+		if len(sys.argv) == 4:
+			if sys.argv[3] == "--disable-stats":
+				disable_stats = True
+			if sys.argv[3] == "--disable-prompt":
+				disable_prompt = True
+	return disable_stats, disable_prompt
 
 
 def loadgraph(filename):
@@ -132,7 +145,7 @@ def statistics(graph, disable_stats):
 						separated_by[current_k] += 1
 					except KeyError, err:
 						separated_by[current_k] = 1 # create new dictionary entries only has needed, instead of initializing a large number of possible indexes
-	
+		break
 	if not disable_stats: 
 		print_statistics(separated_by)
 
@@ -155,11 +168,12 @@ def print_statistics(separated_by):
 			pass	# if, for example, k=3 added no new failures, separated_by[3] does not exist so we ignore the KeyError
 		
 		if k == 1: 
-			print "k=" + str(k) + ': ' + str(total_failures) + "/" + str(total_connections) + " connections fail." + "\tStill connected: " + '|' * ((total_connections) - total_failures)
+			print "k=" + str(k) + ': ' + str(total_failures) + "/" + str(total_connections) + " existing connections fail." + "\tStill connected: " + '|' * ((total_connections) - total_failures)
 		else:
-			print "k=" + str(k) + ': ' + str(total_failures) + "/" + str(total_connections) + " connections fail." + "\tStill connected: " + '|' * ((total_connections) - total_failures)
+			print "k=" + str(k) + ': ' + str(total_failures) + "/" + str(total_connections) + " existing connections fail." + "\tStill connected: " + '|' * ((total_connections) - total_failures)
 	# print "(run with argument [--disable-stats] to supress the prints above)"
 	print
+
 
 def link_connectivity(graph):
 	min_k = None
@@ -189,11 +203,12 @@ def link_connectivity(graph):
 
 
 
-disable_stats = check_args()
+disable_stats, disable_prompt = check_args()
 graph = loadgraph(sys.argv[1])
 #pprint(graph)
 statistics(graph, disable_stats)
 link_connectivity(graph)
-while True:
-	src, dest = prompt()
-	print "No. of disjoint paths: " + str(count_disjoint(graph, src, dest))
+if not disable_prompt:
+	while True:
+		src, dest = prompt()
+		print "No. of disjoint paths: " + str(count_disjoint(graph, src, dest))

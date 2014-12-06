@@ -1,0 +1,4 @@
+k=1: 1/3 existing connections fail.	Still connected: ||
+k=2: 3/3 existing connections fail.	Still connected: 
+
+The graph is already disconnected, 2 can't connect to 1

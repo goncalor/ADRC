@@ -1,0 +1,7 @@
+k=1: 2/5 existing connections fail.	Still connected: |||
+k=2: 4/5 existing connections fail.	Still connected: |
+k=3: 4/5 existing connections fail.	Still connected: |
+k=4: 5/5 existing connections fail.	Still connected: 
+
+1 broken link is enough for the network to become disconnected
+for example: 1 can be separated from 2 by only 1 broken link

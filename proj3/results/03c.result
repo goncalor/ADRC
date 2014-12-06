@@ -1,0 +1,5 @@
+k=1: 0/2 existing connections fail.	Still connected: ||
+k=2: 2/2 existing connections fail.	Still connected: 
+
+2 broken links are enough for the network to become disconnected
+for example: 1 can be separated from 2 by only 2 broken links
