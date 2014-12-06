@@ -87,10 +87,6 @@ def count_disjoint(graph, src, dest): # Edmond Karp
 	graph = copy.deepcopy(graph)	# change graph only in this scope
 	visited = {}
 
-	for node in graph:
-		visited[node] = (False, None)
-
-
 	# all disjoint paths have been found when we can't find dest anymore
 	nr_disjoint = -1
 	dest_found = True
