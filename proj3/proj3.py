@@ -1,28 +1,7 @@
 import sys
 from pprint import pprint
 import copy
-
-def check_args():
-	""" checks if a file was supplied to the script """
-	disable_stats = False
-	disable_prompt = False
-	
-	if len(sys.argv) < 2 or len(sys.argv) > 4:
-		print "Usage: python " + sys.argv[0] + " <internet_file> [--disable-stats] [--disable-prompt]\n"
-		exit()
-		
-	else:
-		if len(sys.argv) >= 3:
-			if sys.argv[2] == "--disable-stats":
-				disable_stats = True
-			if sys.argv[2] == "--disable-prompt":
-				disable_prompt = True
-		if len(sys.argv) == 4:
-			if sys.argv[3] == "--disable-stats":
-				disable_stats = True
-			if sys.argv[3] == "--disable-prompt":
-				disable_prompt = True
-	return disable_stats, disable_prompt
+import argparse
 
 
 def loadgraph(filename):
@@ -128,7 +107,7 @@ def count_disjoint(graph, src, dest): # Edmond Karp
 	return nr_disjoint
 
 
-def statistics(graph, disable_stats):
+def statistics(graph):
 	
 	separated_by = {} # k indexes the dictionary. separated_by[k] = number of pairs of nodes that get separeted if k links fail
 		
@@ -141,9 +120,8 @@ def statistics(graph, disable_stats):
 						separated_by[current_k] += 1
 					except KeyError, err:
 						separated_by[current_k] = 1 # create new dictionary entries only has needed, instead of initializing a large number of possible indexes
-		
-	if not disable_stats: 
-		print_statistics(separated_by)
+
+	print_statistics(separated_by)
 
 
 def print_statistics(separated_by):
@@ -198,13 +176,20 @@ def link_connectivity(graph):
 	return
 
 
+# parse script options
+parser = argparse.ArgumentParser()
+parser.add_argument("graph_file", help = "path for a graph file")
+parser.add_argument("--disable-stats", "-ds", help = "do not show graph stats", action="store_true")
+parser.add_argument("--disable-prompt", "-dp", help = "do not show prompt", action="store_true")
+args = parser.parse_args()
 
-disable_stats, disable_prompt = check_args()
+
 graph = loadgraph(sys.argv[1])
 #pprint(graph)
-statistics(graph, disable_stats)
+if not args.disable_stats:
+	statistics(graph)
 link_connectivity(graph)
-if not disable_prompt:
+if not args.disable_prompt:
 	while True:
 		src, dest = prompt()
 		print "No. of disjoint paths: " + str(count_disjoint(graph, src, dest))
