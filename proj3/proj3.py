@@ -58,52 +58,78 @@ def prompt():
 	return (src, dest)
 
 
-def count_disjoint(graph, src, dest): # Edmond Karp
+def BFS(graph, src, dest):
+
+	fringe = set([src])
+	newfringe = set()
+	visited = {}
+	dest_found = False
+
+	# all nodes not visited
+	for node in graph:
+		visited[node] = (False, None)
+
+	# do a BFS to find dest
+	while fringe:
+		for node in fringe:
+			if node == dest:
+				dest_found = True
+				fringe = set()	# breaks the while loop
+				break
+
+			for neighbour in graph[node]:
+				if not visited[neighbour][0]:
+					newfringe.add(neighbour)
+					visited[neighbour] = (True, node)
+
+		fringe = set(newfringe)
+		newfringe = set()
+
+	if dest_found:
+		path = []
+		node = dest
+		while node != src:
+			path.append(node)
+			node = visited[node][1]
+		return path + [src]
+	return []
+
+
+def reverse_path(graph, path):
+
+	i = 1
+	src = path[-1]
+	node = path[0]
+	while node != src:
+		next = path[i]
+		graph[node].add(next)
+		graph[next].remove(node)
+		i += 1
+		node = next
+
+
+def count_disjoint(graph, src, dest, ret_graph=False): # Edmond Karp
 
 	if src == dest:
+		if ret_graph:
+			return graph
 		return 0
 
 	graph = copy.deepcopy(graph)	# change graph only in this scope
-	visited = {}
 
 	# all disjoint paths have been found when we can't find dest anymore
 	nr_disjoint = -1
-	dest_found = True
-	while dest_found:
-		dest_found = False
+	path = True
+	while path:
 		nr_disjoint += 1
-		fringe = set([src])
-		newfringe = set()
-
-		# all nodes not visited
-		for node in graph:
-			visited[node] = (False, None)
-
-		# do a BFS to find dest
-		while fringe:
-			for node in fringe:
-				if node == dest:
-					dest_found = True
-					fringe = set()	# breaks the while loop
-					break
-
-				for neighbour in graph[node]:
-					if not visited[neighbour][0]:
-						newfringe.add(neighbour)
-						visited[neighbour] = (True, node)
-
-			fringe = set(newfringe)
-			newfringe = set()
+		path = BFS(graph, src, dest)
 
 		# backtrace from dest to scr and invert edges
-		if dest_found:
-			node = dest
-			while node != src:
-				via = visited[node][1]
-				graph[node].add(via)
-				graph[via].remove(node)
-				node = via
+		if path:
+			reverse_path(graph, path)
 
+	if ret_graph:
+		return graph
 	return nr_disjoint
 
 
@@ -169,6 +195,9 @@ def link_connectivity(graph):
 	else:
 		print str(min_k) + " broken links are enough for the network to become disconnected."
 		print "for example: " + str(exampleA) + " can be separated from " + str(exampleB) + " by only " + str(min_k) + " broken links"
+
+	new_graph = count_disjoint(graph, nodeA, nodeB, True)
+	#print new_graph
 
 
 # parse script options
