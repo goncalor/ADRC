@@ -1,4 +1,4 @@
-k=1: 5/6 existing connections fail.	Still connected: |
-k=2: 6/6 existing connections fail.	Still connected: 
+k=1: 5/6 connections fail.	Still connected: |
+k=2: 6/6 connections fail.	Still connected: 
 
-The graph is already disconnected, 2 can't connect to 1
+The graph is not connected. 2 cannot reach 1.

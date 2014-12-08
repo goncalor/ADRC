@@ -61,7 +61,7 @@ def prompt():
 def count_disjoint(graph, src, dest): # Edmond Karp
 
 	if src == dest:
-		return 0	# 0 ?
+		return 0
 
 	graph = copy.deepcopy(graph)	# change graph only in this scope
 	visited = {}
@@ -141,11 +141,7 @@ def print_statistics(separated_by):
 		except KeyError:
 			pass	# if, for example, k=3 added no new failures, separated_by[3] does not exist so we ignore the KeyError
 		
-		if k == 1: 
-			print "k=" + str(k) + ': ' + str(total_failures) + "/" + str(total_connections) + " existing connections fail." + "\tStill connected: " + '|' * ((total_connections) - total_failures)
-		else:
-			print "k=" + str(k) + ': ' + str(total_failures) + "/" + str(total_connections) + " existing connections fail." + "\tStill connected: " + '|' * ((total_connections) - total_failures)
-	# print "(run with argument [--disable-stats] to supress the prints above)"
+		print "k=" + str(k) + ': ' + str(total_failures) + "/" + str(total_connections) + " connections fail." + "\tStill connected: " + '|' * ((total_connections) - total_failures)
 	print
 
 
@@ -157,7 +153,7 @@ def link_connectivity(graph):
 				k = count_disjoint(graph, nodeA, nodeB)
 				
 				if k == 0: # means at least one pair is already disconnected
-					print "The graph is already disconnected, " + str(nodeA) + " can't connect to " + str(nodeB)
+					print "The graph is not connected. " + str(nodeA) + " cannot reach " + str(nodeB) + "."
 					return
 				if k < min_k or min_k == None: # if found a new minimum k or first k computed 
 					min_k = k
@@ -165,22 +161,22 @@ def link_connectivity(graph):
 					exampleB = nodeB
 	
 	if min_k == None: # only happens if there are no pairs, i.e. there's only one node
-		print "The graph has only one node and therefore cannot become disconnected"
+		print "The graph has only one node and therefore cannot become disconnected."
 		return
 	if min_k == 1:
-		print "1 broken link is enough for the network to become disconnected"
+		print "1 broken link is enough for the network to become disconnected."
 		print "for example: " + str(exampleA) + " can be separated from " + str(exampleB) + " by only 1 broken link"
 	else:
-		print str(min_k) + " broken links are enough for the network to become disconnected"
+		print str(min_k) + " broken links are enough for the network to become disconnected."
 		print "for example: " + str(exampleA) + " can be separated from " + str(exampleB) + " by only " + str(min_k) + " broken links"
-	return
 
 
 # parse script options
 parser = argparse.ArgumentParser()
 parser.add_argument("graph_file", help = "path for a graph file")
-parser.add_argument("--disable-stats", "-ds", help = "do not show graph stats", action="store_true")
-parser.add_argument("--disable-prompt", "-dp", help = "do not show prompt", action="store_true")
+parser.add_argument("-ds", "--disable-stats", help = "do not compute graph stats", action="store_true")
+parser.add_argument("-dp", "--disable-prompt", help = "do not show prompt", action="store_true")
+parser.add_argument("-dc", "--disable-connectivity", help = "do not compute link-connectivity", action="store_true")
 args = parser.parse_args()
 
 
@@ -188,7 +184,8 @@ graph = loadgraph(sys.argv[1])
 #pprint(graph)
 if not args.disable_stats:
 	statistics(graph)
-link_connectivity(graph)
+if not args.disable_connectivity:
+	link_connectivity(graph)
 if not args.disable_prompt:
 	while True:
 		src, dest = prompt()
