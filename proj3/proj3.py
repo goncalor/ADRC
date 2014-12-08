@@ -147,27 +147,31 @@ def statistics(graph):
 					except KeyError, err:
 						separated_by[current_k] = 1 # create new dictionary entries only has needed, instead of initializing a large number of possible indexes
 
-	print_statistics(separated_by)
+	print_statistics(graph, separated_by)
 
 
-def print_statistics(separated_by):
-	total_connections = 0
-	total_failures = 0
+def print_statistics(graph, separated_by):
+	total_connected = 0
+	total_pairs = len(graph)*(len(graph)-1)
+
 	try: 
 		max_k = max(separated_by)
 	except ValueError:
 		return # if the graph has only one node this will fail and link_connectivity() already has an apropriate print
-	
-	for k in separated_by: # count the total number of connections that exist by adding all the values of the dictionary
-		total_connections += separated_by[k]
 
-	for k in range(1, max_k+1): # print all values of k until the maximum one, not only the values that make new connections fail
+	for k in separated_by: # count the total number of connections that exist by adding all the values of the dictionary
+		total_connected += separated_by[k]
+
+	print "\n %s  fraction of pairs with at least k link-disjoint paths between them" % "k".rjust(len(str(max_k)))
+	for k in range(1, max_k+2): # print all values of k until the maximum one, not only the values that make new connections fail
+
+		nbars = int((total_connected/float(total_pairs))*50)
+		print "{0}  {1} {2:.2f}".format(" " + str(k).rjust(len(str(max_k))), '|' * nbars, total_connected/float(total_pairs))
+
 		try:
-			total_failures += separated_by[k]
+			total_connected -= separated_by[k]
 		except KeyError:
 			pass	# if, for example, k=3 added no new failures, separated_by[3] does not exist so we ignore the KeyError
-		
-		print "k=" + str(k) + ': ' + str(total_failures) + "/" + str(total_connections) + " connections fail." + "\tStill connected: " + '|' * ((total_connections) - total_failures)
 	print
 
 
@@ -179,7 +183,7 @@ def link_connectivity(graph):
 				k = count_disjoint(graph, nodeA, nodeB)
 				
 				if k == 0: # means at least one pair is already disconnected
-					print "The graph is not connected. " + str(nodeA) + " cannot reach " + str(nodeB) + "."
+					print "This graph is not strongly connected. " + str(nodeA) + " cannot reach " + str(nodeB) + "."
 					return
 				if k < min_k or min_k == None: # if found a new minimum k or first k computed 
 					min_k = k
@@ -187,19 +191,14 @@ def link_connectivity(graph):
 					exampleB = nodeB
 	
 	if min_k == None: # only happens if there are no pairs, i.e. there's only one node
-		print "The graph has only one node and therefore cannot become disconnected."
+		print "This graph has only one node."
 		return
-	if min_k == 1:
-		print "1 broken link is enough for the network to become disconnected."
-		print "for example: " + str(exampleA) + " can be separated from " + str(exampleB) + " by only 1 broken link"
-	else:
-		print str(min_k) + " broken links are enough for the network to become disconnected."
-		print "for example: " + str(exampleA) + " can be separated from " + str(exampleB) + " by only " + str(min_k) + " broken links"
+
+	print "The graph is " + str(min_k) + "-edge-connected."
+	print "example: make " + str(exampleA) + " unable to reach " + str(exampleB) + ". Break the following links"
 
 	new_graph = count_disjoint(graph, exampleA, exampleB, True)
-	#print new_graph
 
-	print "If you break the following links the graph will not be strongly connected"
 	for peer in graph[exampleA] - new_graph[exampleA]:
 		print " %s -> %s" % (exampleA, peer)
 
@@ -220,6 +219,7 @@ if not args.disable_stats:
 if not args.disable_connectivity:
 	link_connectivity(graph)
 if not args.disable_prompt:
+	print "\nPress Return twice to exit."
 	while True:
 		src, dest = prompt()
 		print "No. of disjoint paths: " + str(count_disjoint(graph, src, dest))
