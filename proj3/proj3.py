@@ -196,8 +196,12 @@ def link_connectivity(graph):
 		print str(min_k) + " broken links are enough for the network to become disconnected."
 		print "for example: " + str(exampleA) + " can be separated from " + str(exampleB) + " by only " + str(min_k) + " broken links"
 
-	new_graph = count_disjoint(graph, nodeA, nodeB, True)
+	new_graph = count_disjoint(graph, exampleA, exampleB, True)
 	#print new_graph
+
+	print "If you break the following links the graph will not be strongly connected"
+	for peer in graph[exampleA] - new_graph[exampleA]:
+		print " %s -> %s" % (exampleA, peer)
 
 
 # parse script options
@@ -209,7 +213,7 @@ parser.add_argument("-dc", "--disable-connectivity", help = "do not compute link
 args = parser.parse_args()
 
 
-graph = loadgraph(sys.argv[1])
+graph = loadgraph(args.graph_file)
 #pprint(graph)
 if not args.disable_stats:
 	statistics(graph)
