@@ -26,11 +26,11 @@
 \pagebreak
 
 \section{Caminhos Disjuntos entre Dois Nós}
-Na primeira parte do projecto é-nos pedido um algoritmo que dado um digrafo, um nó de origem e um de destino determine qual o número mínimo de ligações que é preciso quebrar para que os dois nós deixem de conseguir chegar um ao outro.
+Na primeira parte do projecto é-nos pedido um algoritmo que dado um digrafo, um nó de origem e um de destino determine qual o número mínimo de ligações que é preciso quebrar para que o nó de origem deixe de conseguir chegar ao nó de destino.
 
-Podem existir inúmeros caminhos entre um nó de origem e um de destino mas sabemos que se esses caminhos não forem disjuntos em termos de arestas ao quebrarmos um caminho quebramos todos os que não sejam disjuntos desse. Parece portanto óbvio que este problema é equivalente a encontrar o número de caminhos disjuntos que permitem chegar do nó origem ao nó de destino. Há que notar também que como estamos na presença de um digrafo não é recíproco ir de um nó A para B ou de B para A.
+Podem existir inúmeros caminhos entre o nó de origem e o de destino mas sabemos que se esses caminhos não forem disjuntos em termos de arestas ao quebrarmos uma aresta comum quebramos todos caminhos. Parece portanto óbvio que este problema é equivalente a encontrar o número de caminhos disjuntos que permitem chegar do nó origem ao nó de destino. Há que notar também que como estamos na presença de um digrafo não é recíproco ir de um nó A para B ou de B para A.
 
-O problema pode ser traduzido para um problema de fluxos máximos em que cada ligação tem capacidade unitária e em que o fluxo permitido é ou unitário ou nulo. Para resolver este problema podemos usar o algoritmo de Ford--Fulkerson ou o de Edmonds--Karp. Optámos por nos basear no segundo algoritmo, que faz as procuras com BFS. O pseudo-código da nossa implementação pode ser vista no Algoritmo~\ref{algo:EdmondsKarp}.
+O problema pode ser traduzido para um problema de fluxos máximos em que cada ligação tem capacidade unitária e em que o fluxo permitido é ou unitário ou nulo. Para resolver este problema podemos usar o algoritmo de Ford--Fulkerson ou o de Edmonds--Karp. Optámos por nos basear no segundo algoritmo, que faz as procuras com BFS. O pseudo-código da nossa implementação pode ser visto no Algoritmo~\ref{algo:EdmondsKarp}.
 
 \lstset{emph={graph, src, dest, nr_disjoint, path}, emphstyle=\itshape} 
 \begin{algorithm}[h]
@@ -58,7 +58,7 @@ No último problema deste trabalho é pedido um algoritmo que calcule a k-conect
 
 Da definição anterior segue que para um digrafo ser k-conexo todos os pares de nós têm que ser pelo menos k-conexos, ou seja é necessário que existam pelo menos $k$ caminhos disjuntos de \emph{cada nó} para cada um dos outros. Esta condição poderia ser relaxada no caso de estarmos na presença de um grafo não direccionado i.e.\ num grafo não direccionado basta que \emph{um nó} tenha $k$ caminhos disjuntos para cada um dos outros. Esta diferença deve-se ao facto de que num grafo não direccionado os caminhos disjuntos de A para B são os mesmos que de B para A, mas num digrafo estes caminhos não são coincidentes e podem ser em número diferente.
 
-Tendo em conta que o objecto de estudo deste trabalho são digrafos, um algoritmo possível para determinar a k-conectividade é veririficar qual o mímino de caminhos disjuntos que existe entre cada par de nós. O para que tiver entre de si o menor número de caminhos disjuntos impõe esse número como o valor de $k$. O Algoritmo~\ref{algo:k-conectividade} faz uso deste raciocínio.
+Tendo em conta que o objecto de estudo deste trabalho são digrafos, um algoritmo possível para determinar a k-conectividade é veririficar qual o mímino de caminhos disjuntos que existe entre cada par de nós. O par que tiver entre si o menor número de caminhos disjuntos impõe esse número como o valor de $k$. O Algoritmo~\ref{algo:k-conectividade} faz uso deste raciocínio.
 
 \lstset{emph={graph, src, dest, min_k, k}, emphstyle=\itshape} 
 \begin{algorithm}[h]
@@ -82,7 +82,7 @@ k_connectivity(graph):
 
 O Algoritmo~\ref{algo:k-conectividade} usa o Algoritmo~\ref{algo:EdmondsKarp} $n(n-1)$ vezes, pelo que a complexidade do primeiro será $O(n^3 m^2)$.
 
-Para descobrir um exemplo de $k$ ligações que quebradas façam a rede não ser conexa usámos o raciocínio de que quando o Algoritmo~\ref{algo:EdmondsKarp} termina as ligações que fazem parte de caminhos disjuntos estarão invertidas em comparação com o grafo original. Consequentemente se do conjunto de ligações invertidas escolhermos $k$ que pertençam a caminhos disjuntos obtemos um conjunto de ligações que se quebradas tornam o grafo desconexo. Uma forma simples de escolher ligações de caminhos disjuntos é escolher as $k$ ligações de entre as que saem da origem ou de entre as que entram no destino.
+Para descobrir um exemplo de $k$ ligações que quebradas façam a rede não ser conexa usámos o raciocínio de que quando o Algoritmo~\ref{algo:EdmondsKarp} termina as ligações que fazem parte de caminhos disjuntos estarão invertidas em comparação com o grafo original. Consequentemente se do conjunto de ligações invertidas escolhermos $k$ que pertençam a caminhos disjuntos obtemos um conjunto de ligações que se quebradas tornam o grafo desconexo. Uma forma simples de escolher ligações de caminhos disjuntos é escolher $k$ ligações invertidas de entre as que saem da origem ou de entre as que entram no destino.
 
 %\section{Visualizador de Grafos}
 
