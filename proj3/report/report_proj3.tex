@@ -28,7 +28,7 @@
 \section{Caminhos Disjuntos entre Dois Nós}
 Na primeira parte do projecto é-nos pedido um algoritmo que dado um digrafo, um nó de origem e um de destino determine qual o número mínimo de ligações que é preciso quebrar para que o nó de origem deixe de conseguir chegar ao nó de destino.
 
-Podem existir inúmeros caminhos entre o nó de origem e o de destino mas sabemos que se esses caminhos não forem disjuntos em termos de arestas ao quebrarmos uma aresta comum quebramos todos caminhos. Parece portanto óbvio que este problema é equivalente a encontrar o número de caminhos disjuntos que permitem chegar do nó origem ao nó de destino. Há que notar também que como estamos na presença de um digrafo não é recíproco ir de um nó A para B ou de B para A.
+Podem existir inúmeros caminhos entre o nó de origem e o de destino mas sabemos que se esses caminhos não forem disjuntos em termos de arestas ao quebrarmos uma aresta comum quebramos todos caminhos. Parece portanto óbvio que este problema é equivalente a encontrar o número de caminhos disjuntos que permitem chegar do nó de origem ao nó de destino. Há que notar também que como estamos na presença de um digrafo não é recíproco ir de um nó A para B ou de B para A.
 
 O problema pode ser traduzido para um problema de fluxos máximos em que cada ligação tem capacidade unitária e em que o fluxo permitido é ou unitário ou nulo. Para resolver este problema podemos usar o algoritmo de Ford--Fulkerson ou o de Edmonds--Karp. Optámos por nos basear no segundo algoritmo, que faz as procuras com BFS. O pseudo-código da nossa implementação pode ser visto no Algoritmo~\ref{algo:EdmondsKarp}.
 
@@ -40,7 +40,7 @@ O problema pode ser traduzido para um problema de fluxos máximos em que cada li
 count_disjoint(graph, src, dest):
   nr_disjoint = -1
   while there is a path from src to dest:
-    increment nr_disjoint
+    nr_disjoint = nr_disjoint + 1
     path = BFS(graph, src, dest)
     if a path was found:
       reverse links in path
@@ -51,12 +51,17 @@ count_disjoint(graph, src, dest):
 
 Sendo $n$ o número de nós e $m$ o número de arestas, o algoritmo de Edmonds--Karp é $O(n m^2)$ e a complexidade do Algoritmo~\ref{algo:EdmondsKarp} é a mesma. Verificámos que é possível melhorar este resultado usando o algoritmo de Goldberg que é $O(n^2 m)$. No entanto considerámos que os grafos a considerar são relativamente esparsos e que portanto a melhoria não seria significativa. Segundo \cite{IntrotoAlgorithms3rd} existe ainda o algoritmo ``relabel-to-front'' que é $O(n^3)$.
 
+<<<<<<< HEAD
 \section{Imunidade a Quebras}
 Nesta secção é pedido que se calculem para cada k (número natural), a fracção de pares de nós que são separados quebrando apenas k ligações. A primeira parte deste projecto calcula o número de caminhos disjuntos entre um par de nós, o que equivale ao número de ligações que têm de ser quebrados para separar o par (um por cada caminho disjunto). 
+=======
+\section{Redundância}
+Nesta secção é pedido que se calculem para cada $k \in \mathbb{N} $, a fracção de pares de nós que são separados quebrando apenas $k$ ligações. A primeira parte deste projecto calcula o número de caminhos disjuntos entre um par de nós, o que equivale ao número de ligações que têm de ser quebrados para separar o par (um por cada caminho disjunto). 
+>>>>>>> origin/master
 
-Assim, o método utilizado para resolver a 2ª parte foi correr o Algoritmo~\ref{algo:EdmondsKarp} para cada par de nós (em ambos os sentidos, uma vez que o grafo é direccionado), incrementando o número de pares separados com k ligações cada vez que se descobre um par com k caminhos disjuntos entre si, obtendo no fim o numerador da fracção para cada valor de k. O denominador da fracção é obtido somando o valor de pares separados para cada valor de k, o que corresponde ao número de caminhos disjuntos no grafo. O pseudo-código deste processo pode ser visto no Algoritmo~\ref{algo:Redundancy} 
+Assim, o método utilizado para resolver a 2ª parte foi correr o Algoritmo~\ref{algo:EdmondsKarp} para cada par de nós (em ambos os sentidos, uma vez que o grafo é direccionado), incrementando o número de pares separados com k ligações cada vez que se descobre um par com k caminhos disjuntos entre si, obtendo no fim o numerador da fracção para cada valor de $k$. O denominador da fracção é simplesmente o número de pares origem--destino do grafo. O pseudo-código deste processo pode ser visto no Algoritmo~\ref{algo:Redundancy} 
 
-\lstset{emph={graph, src, dest, min_k, k}, emphstyle=\itshape} 
+\lstset{emph={graph, src, dest, separated_by, k}, emphstyle=\itshape} 
 \begin{algorithm}[h]
 \caption{algoritmo que determina a k-conectividade de um digrafo}
 \label{algo:Redundancy}
@@ -67,14 +72,14 @@ Redundancy(graph):
     for each dest in graph:
       if src $\neq$ dest:
         k = count_disjoint(graph, src, dest)
-        if k != 0:
+        if k $\neq$ 0:
          separated_by[k] = separated_by[k] + 1 
 
   return separeted_by
 \end{lstlisting}
 \end{algorithm}
 
-O Algoritmo~\ref{algo:Redundancy} usa o Algoritmo~\ref{algo:EdmondsKarp} (Edmonds-Karp), de complexidade $O(n m^2)$, $n(n-1)$ vezes, levando a uma complexidade de $O(n^3 m^2)$ para o Algoritmo~\ref{algo:Redundancy}.
+O Algoritmo~\ref{algo:Redundancy} usa o Algoritmo~\ref{algo:EdmondsKarp} (Edmonds--Karp), de complexidade $O(n m^2)$, $n(n-1)$ vezes, levando a uma complexidade de $O(n^3 m^2)$ para o Algoritmo~\ref{algo:Redundancy}.
 
 \section{k-conectividade de um Grafo}
 No último problema deste trabalho é pedido um algoritmo que calcule a k-conectividade de um digrafo em termos de arestas (\textit{k-edge-connectivity)}, ou seja dado um digrafo fortemente conexo qual o número mínimo de ligações que é preciso remover para que o grafo deixe de ser fortemente conexo. Para além disso queremos encontrar um conjunto de ligações que uma vez quebradas fazem o grafo deixar de ser conexo.
@@ -107,11 +112,16 @@ O Algoritmo~\ref{algo:k-conectividade} usa o Algoritmo~\ref{algo:EdmondsKarp} $n
 
 Para descobrir um exemplo de $k$ ligações que quebradas façam a rede não ser conexa usámos o raciocínio de que quando o Algoritmo~\ref{algo:EdmondsKarp} termina as ligações que fazem parte de caminhos disjuntos estarão invertidas em comparação com o grafo original. Consequentemente se do conjunto de ligações invertidas escolhermos $k$ que pertençam a caminhos disjuntos obtemos um conjunto de ligações que se quebradas tornam o grafo desconexo. Uma forma simples de escolher ligações de caminhos disjuntos é escolher $k$ ligações invertidas de entre as que saem da origem ou de entre as que entram no destino.
 
+<<<<<<< HEAD
 \section{Conclusão}
 Este 3º mini-projecto tem grande utilidade para ajudar a identificar as zonas mais vulneráveis de uma rede (no caso de perder certas ligações) e consequentemente a aumentar a sua robustez. Foi notada a falta da existência um algoritmo conhecido para grafos direccionados que resolva o problema da $edge-connectivity$ de forma mais eficiente que usando $n(n-1)$ vezes um algoritmo de $min-cut/max-flow$  de um no para outro como o de $Edmonds--Karp$ usado neste mini-projecto. Sendo ainda uma área de estudo, é possível que uma solução assinptóticamente mais eficiente seja apresentada no futuro.  Como falado nas aulas, um problema de $min-cut$ é muito próximo de um problema de $max-flow$, pelo que este mini-projecto pode ser facilmente alterado para resolver esse tipo de problemas. O visualizador de grafos criado no 2º mini-projecto foi actualizado para o tipo de redes usadas neste trabalho.
 
 
 %\section{Visualizador de Grafos}
+=======
+\section{Visualizador de Grafos}
+Visto que para o trabalho anterior criámos um visualizador de grafos, fizemos pequenas adaptações a esse visualizador de forma a podermos ver digrafos criados para o trabalho actual.
+>>>>>>> origin/master
 
 \bibliographystyle{plain}
 \nocite{slidesADRC}
