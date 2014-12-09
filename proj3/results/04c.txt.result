@@ -2,10 +2,11 @@
  k  fraction of pairs with at least k link-disjoint paths between them
  1  |||||||||||||||||||||||||||||||||||||||||||||||||| 1.00
  2  |||||||||||||||||||||||||||||||||||||||||||||||||| 1.00
- 3  ||||||||||||||||| 0.36
+ 3  |||||||||||||||||||||||||||||||||||||||||||||||||| 1.00
  4   0.00
 
-The graph is 2-edge-connected.
-example: make 0 unable to reach 2. Break the following links
- 0 -> 1
- 0 -> 3
+The graph is 3-edge-connected.
+example: make 1 unable to reach 2. Break the following links
+ 1 -> 2
+ 1 -> 3
+ 1 -> 4

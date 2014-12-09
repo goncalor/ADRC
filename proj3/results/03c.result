@@ -1,5 +1,10 @@
-k=1: 0/6 connections fail.	Still connected: ||||||
-k=2: 6/6 connections fail.	Still connected: 
 
-2 broken links are enough for the network to become disconnected.
-for example: 1 can be separated from 2 by only 2 broken links
+ k  fraction of pairs with at least k link-disjoint paths between them
+ 1  |||||||||||||||||||||||||||||||||||||||||||||||||| 1.00
+ 2  |||||||||||||||||||||||||||||||||||||||||||||||||| 1.00
+ 3   0.00
+
+The graph is 2-edge-connected.
+example: make 1 unable to reach 2. Break the following links
+ 1 -> 2
+ 1 -> 3

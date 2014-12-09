@@ -27,10 +27,10 @@ def loadgraph(filename):
 		head = int(tmp[1])
 
 		if tail not in graph:	# let us add a new node
-			graph[tail] = set()
-		graph[tail].add(head)	# tail can get to head
+			graph[tail] = []
+		graph[tail].append(head)	# tail can get to head
 		if head not in graph:
-			graph[head] = set()
+			graph[head] = []
 	f.close()	# close the file
 	return graph
 
@@ -102,7 +102,7 @@ def reverse_path(graph, path):
 	node = path[0]
 	while node != src:
 		next = path[i]
-		graph[node].add(next)
+		graph[node].append(next)
 		graph[next].remove(node)
 		i += 1
 		node = next
@@ -199,7 +199,7 @@ def link_connectivity(graph):
 
 	new_graph = count_disjoint(graph, exampleA, exampleB, True)
 
-	for peer in graph[exampleA] - new_graph[exampleA]:
+	for peer in set(graph[exampleA]) - set(new_graph[exampleA]):
 		print " %s -> %s" % (exampleA, peer)
 
 

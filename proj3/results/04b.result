@@ -1,4 +1,7 @@
-k=1: 5/6 connections fail.	Still connected: |
-k=2: 6/6 connections fail.	Still connected: 
 
-The graph is not connected. 2 cannot reach 1.
+ k  fraction of pairs with at least k link-disjoint paths between them
+ 1  ||||||||||||||||||||||||| 0.50
+ 2  |||| 0.08
+ 3   0.00
+
+This graph is not strongly connected. 2 cannot reach 1.

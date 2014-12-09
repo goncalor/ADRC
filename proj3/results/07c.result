@@ -1,5 +1,8 @@
-k=1: 0/36 connections fail.	Still connected: ||||||||||||||||||||||||||||||||||||
-k=2: 30/36 connections fail.	Still connected: ||||||
-k=3: 36/36 connections fail.	Still connected: 
 
-The graph is not connected. 1 cannot reach 0.
+ k  fraction of pairs with at least k link-disjoint paths between them
+ 1  |||||||||||||||||||||||||||||||||||||||||| 0.86
+ 2  |||||||||||||||||||||||||||||||||||||||||| 0.86
+ 3  ||||||| 0.14
+ 4   0.00
+
+This graph is not strongly connected. 1 cannot reach 0.

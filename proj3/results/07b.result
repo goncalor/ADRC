@@ -1,6 +1,12 @@
-k=1: 0/42 connections fail.	Still connected: ||||||||||||||||||||||||||||||||||||||||||
-k=2: 0/42 connections fail.	Still connected: ||||||||||||||||||||||||||||||||||||||||||
-k=3: 42/42 connections fail.	Still connected: 
 
-3 broken links are enough for the network to become disconnected.
-for example: 0 can be separated from 1 by only 3 broken links
+ k  fraction of pairs with at least k link-disjoint paths between them
+ 1  |||||||||||||||||||||||||||||||||||||||||||||||||| 1.00
+ 2  |||||||||||||||||||||||||||||||||||||||||||||||||| 1.00
+ 3  |||||||||||||||||||||||||||||||||||||||||||||||||| 1.00
+ 4   0.00
+
+The graph is 3-edge-connected.
+example: make 0 unable to reach 1. Break the following links
+ 0 -> 1
+ 0 -> 2
+ 0 -> 6

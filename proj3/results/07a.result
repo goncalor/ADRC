@@ -1,7 +1,11 @@
-k=1: 23/30 connections fail.	Still connected: |||||||
-k=2: 29/30 connections fail.	Still connected: |
-k=3: 29/30 connections fail.	Still connected: |
-k=4: 30/30 connections fail.	Still connected: 
 
-1 broken link is enough for the network to become disconnected.
-for example: 1 can be separated from 2 by only 1 broken link
+ k  fraction of pairs with at least k link-disjoint paths between them
+ 1  |||||||||||||||||||||||||||||||||||||||||||||||||| 1.00
+ 2  ||||||||||| 0.23
+ 3  | 0.03
+ 4  | 0.03
+ 5   0.00
+
+The graph is 1-edge-connected.
+example: make 1 unable to reach 2. Break the following links
+ 1 -> 2
