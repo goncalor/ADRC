@@ -26,9 +26,38 @@
 \pagebreak
 
 \section{Caminhos Disjuntos entre Dois Nós}
+Na primeira parte do projecto é-nos pedido um algoritmo que dado um digrafo, um nó de origem e um de destino determine qual o número mínimo de ligações que é preciso quebrar para que os dois nós deixem de conseguir chegar um ao outro.
+
+Podem existir inúmeros caminhos entre um nó de origem e um de destino mas sabemos que se esses caminhos não forem disjuntos em termos de arestas ao quebrarmos um caminho quebramos todos os que não sejam disjuntos desse. Parece portanto óbvio que este problema é equivalente a encontrar o número de caminhos disjuntos que permitem chegar do nó origem ao nó de destino. Há que notar também que como estamos na presença de um digrafo não é recíproco ir de um nó A para B ou de B para A.
+
+O problema pode ser traduzido para um problema de fluxos máximos em que cada ligação tem capacidade unitária e em que o fluxo permitido é ou unitário ou nulo. Para resolver este problema podemos usar o algoritmo de Ford--Fulkerson ou o de Edmonds--Karp. Optámos por nos basear no segundo algoritmo, que faz as procuras com BFS. O pseudo-código da nossa implementação pode ser vista no Algoritmo~\ref{algo:EdmondsKarp}.
+
+\lstset{emph={graph, src, dest, nr_disjoint, path}, emphstyle=\itshape} 
+\begin{algorithm}[h]
+\caption{algoritmo para contagem de caminhos disjuntos num digrafo}
+\label{algo:EdmondsKarp}
+\begin{lstlisting}
+count_disjoint(graph, src, dest):
+  nr_disjoint = -1
+  while there is a path from src to dest:
+    increment nr_disjoint
+    path = BFS(graph, src, dest)
+    if a path was found:
+      reverse links in path
+
+  return nr_disjoint
+\end{lstlisting}
+\end{algorithm}
+
+O algoritmo de Edmonds--Karp é $O(VE^2)$ e a complexidade do Algoritmo~\ref{algo:EdmondsKarp} é a mesma. Verificámos que é possível melhorar este resultado usando o algoritmo de Goldberg que é $O(V^2E)$. No entanto considerámos que os grafos a considerar são relativamente esparsos e que portanto a melhoria não seria significativa. Segundo \cite{IntrotoAlgorithms3rd} existe ainda o algoritmo ``relabel-to-front'' que é $O(V^3)$.
 
 \section{Redundância}
 
 \section{k-conectividade de um Grafo}
+
+%\section{Visualizador de Grafos}
+
+\bibliographystyle{plain}
+\bibliography{IntrotoAlgorithms3rd}	% no spaces between commas!
 
 \end{document}
