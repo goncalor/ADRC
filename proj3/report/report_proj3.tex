@@ -28,7 +28,7 @@
 \section{Caminhos Disjuntos entre Dois Nós}
 Na primeira parte do projecto é-nos pedido um algoritmo que dado um digrafo, um nó de origem e um de destino determine qual o número mínimo de ligações que é preciso quebrar para que o nó de origem deixe de conseguir chegar ao nó de destino.
 
-Podem existir inúmeros caminhos entre o nó de origem e o de destino mas sabemos que se esses caminhos não forem disjuntos em termos de arestas ao quebrarmos uma aresta comum quebramos todos caminhos. Parece portanto óbvio que este problema é equivalente a encontrar o número de caminhos disjuntos que permitem chegar do nó origem ao nó de destino. Há que notar também que como estamos na presença de um digrafo não é recíproco ir de um nó A para B ou de B para A.
+Podem existir inúmeros caminhos entre o nó de origem e o de destino mas sabemos que se esses caminhos não forem disjuntos em termos de arestas ao quebrarmos uma aresta comum quebramos todos caminhos. Parece portanto óbvio que este problema é equivalente a encontrar o número de caminhos disjuntos que permitem chegar do nó de origem ao nó de destino. Há que notar também que como estamos na presença de um digrafo não é recíproco ir de um nó A para B ou de B para A.
 
 O problema pode ser traduzido para um problema de fluxos máximos em que cada ligação tem capacidade unitária e em que o fluxo permitido é ou unitário ou nulo. Para resolver este problema podemos usar o algoritmo de Ford--Fulkerson ou o de Edmonds--Karp. Optámos por nos basear no segundo algoritmo, que faz as procuras com BFS. O pseudo-código da nossa implementação pode ser visto no Algoritmo~\ref{algo:EdmondsKarp}.
 
