@@ -7,3 +7,4 @@
 The graph is 2-edge-connected.
 example: make 1 unable to reach 2. Break the following links
  1 -> 2
+ 1 -> 2
