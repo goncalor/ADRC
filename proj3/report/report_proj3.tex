@@ -52,6 +52,29 @@ count_disjoint(graph, src, dest):
 Sendo $n$ o número de nós e $m$ o número de arestas, o algoritmo de Edmonds--Karp é $O(n m^2)$ e a complexidade do Algoritmo~\ref{algo:EdmondsKarp} é a mesma. Verificámos que é possível melhorar este resultado usando o algoritmo de Goldberg que é $O(n^2 m)$. No entanto considerámos que os grafos a considerar são relativamente esparsos e que portanto a melhoria não seria significativa. Segundo \cite{IntrotoAlgorithms3rd} existe ainda o algoritmo ``relabel-to-front'' que é $O(n^3)$.
 
 \section{Redundância}
+Nesta secção é pedido que se calculem para cada k (número natural), a fracção de pares de nós que são separados quebrando apenas k ligações. A primeira parte deste projecto calcula o número de caminhos disjuntos entre um par de nós, o que equivale ao número de ligações que têm de ser quebrados para separar o par (um por cada caminho disjunto). 
+
+Assim, o método utilizado para resolver a 2ª parte foi correr o Algoritmo~\ref{algo:EdmondsKarp} para cada par de nós (em ambos os sentidos, uma vez que o grafo é direccionado), incrementando o número de pares separados com k ligações cada vez que se descobre um par com k caminhos disjuntos entre si, obtendo no fim o numerador da fracção para cada valor de k. O denominador da fracção é obtido somando o valor de pares separados para cada valor de k, o que corresponde ao número de caminhos disjuntos no grafo. O pseudo-código deste processo pode ser visto no Algoritmo~\ref{algo:Redundancy} 
+
+\lstset{emph={graph, src, dest, min_k, k}, emphstyle=\itshape} 
+\begin{algorithm}[h]
+\caption{algoritmo que determina a k-conectividade de um digrafo}
+\label{algo:Redundancy}
+\begin{lstlisting}[linewidth=0.95\linewidth, mathescape]
+Redundancy(graph):
+  int separated_by[k]
+  for each src in graph:
+    for each dest in graph:
+      if src $\neq$ dest:
+        k = count_disjoint(graph, src, dest)
+        if k != 0:
+         separated_by[k] = separated_by[k] + 1 
+
+  return separeted_by
+\end{lstlisting}
+\end{algorithm}
+
+O Algoritmo~\ref{algo:Redundancy} usa o Algoritmo~\ref{algo:EdmondsKarp} (Edmonds-Karp), de complexidade $O(n m^2)$, $n(n-1)$ vezes, levando a uma complexidade de $O(n^3 m^2)$ para o Algoritmo~\ref{algo:Redundancy}.
 
 \section{k-conectividade de um Grafo}
 No último problema deste trabalho é pedido um algoritmo que calcule a k-conectividade de um digrafo em termos de arestas (\textit{k-edge-connectivity)}, ou seja dado um digrafo fortemente conexo qual o número mínimo de ligações que é preciso remover para que o grafo deixe de ser fortemente conexo. Para além disso queremos encontrar um conjunto de ligações que uma vez quebradas fazem o grafo deixar de ser conexo.
