@@ -199,7 +199,7 @@ def link_connectivity(graph):
 
 	new_graph = count_disjoint(graph, exampleA, exampleB, True)
 
-	for peer in set(graph[exampleA]) - set(new_graph[exampleA]):
+	for peer in [item for item in graph[exampleA] if not item in new_graph[exampleA] or new_graph[exampleA].remove(item)]:
 		print " %s -> %s" % (exampleA, peer)
 
 
