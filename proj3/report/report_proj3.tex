@@ -36,7 +36,7 @@ O problema pode ser traduzido para um problema de fluxos máximos em que cada li
 \begin{algorithm}[h]
 \caption{algoritmo para contagem de caminhos disjuntos num digrafo}
 \label{algo:EdmondsKarp}
-\begin{lstlisting}
+\begin{lstlisting}[linewidth=0.95\linewidth]
 count_disjoint(graph, src, dest):
   nr_disjoint = -1
   while there is a path from src to dest:
@@ -49,11 +49,40 @@ count_disjoint(graph, src, dest):
 \end{lstlisting}
 \end{algorithm}
 
-O algoritmo de Edmonds--Karp é $O(VE^2)$ e a complexidade do Algoritmo~\ref{algo:EdmondsKarp} é a mesma. Verificámos que é possível melhorar este resultado usando o algoritmo de Goldberg que é $O(V^2E)$. No entanto considerámos que os grafos a considerar são relativamente esparsos e que portanto a melhoria não seria significativa. Segundo \cite{IntrotoAlgorithms3rd} existe ainda o algoritmo ``relabel-to-front'' que é $O(V^3)$.
+Sendo $n$ o número de nós e $m$ o número de arestas, o algoritmo de Edmonds--Karp é $O(n m^2)$ e a complexidade do Algoritmo~\ref{algo:EdmondsKarp} é a mesma. Verificámos que é possível melhorar este resultado usando o algoritmo de Goldberg que é $O(n^2 m)$. No entanto considerámos que os grafos a considerar são relativamente esparsos e que portanto a melhoria não seria significativa. Segundo \cite{IntrotoAlgorithms3rd} existe ainda o algoritmo ``relabel-to-front'' que é $O(n^3)$.
 
 \section{Redundância}
 
 \section{k-conectividade de um Grafo}
+No último problema deste trabalho é pedido um algoritmo que calcule a k-conectividade de um digrafo em termos de arestas (\textit{k-edge-connectivity)}, ou seja dado um digrafo fortemente conexo qual o número mínimo de ligações que é preciso remover para que o grafo deixe de ser fortemente conexo. Para além disso queremos encontrar um conjunto de ligações que uma vez quebradas fazem o grafo deixar de ser conexo.
+
+Da definição anterior segue que para um digrafo ser k-conexo todos os pares de nós têm que ser pelo menos k-conexos, ou seja é necessário que existam pelo menos $k$ caminhos disjuntos de \emph{cada nó} para cada um dos outros. Esta condição poderia ser relaxada no caso de estarmos na presença de um grafo não direccionado i.e.\ num grafo não direccionado basta que \emph{um nó} tenha $k$ caminhos disjuntos para cada um dos outros. Esta diferença deve-se ao facto de que num grafo não direccionado os caminhos disjuntos de A para B são os mesmos que de B para A, mas num digrafo estes caminhos não são coincidentes e podem ser em número diferente.
+
+Tendo em conta que o objecto de estudo deste trabalho são digrafos, um algoritmo possível para determinar a k-conectividade é veririficar qual o mímino de caminhos disjuntos que existe entre cada par de nós. O para que tiver entre de si o menor número de caminhos disjuntos impõe esse número como o valor de $k$. O Algoritmo~\ref{algo:k-conectividade} faz uso deste raciocínio.
+
+\lstset{emph={graph, src, dest, min_k, k}, emphstyle=\itshape} 
+\begin{algorithm}[h]
+\caption{algoritmo que determina a k-conectividade de um digrafo}
+\label{algo:k-conectividade}
+\begin{lstlisting}[linewidth=0.95\linewidth, mathescape]
+k_connectivity(graph):
+  min_k = $\infty$
+  for each src in graph:
+    for each dest in graph:
+      if src $\neq$ dest:
+        k = count_disjoint(graph, src, dest)
+        if k == 0:
+          return not strongly connected
+        if k < min_k:
+          min_k = k
+
+  return min_k
+\end{lstlisting}
+\end{algorithm}
+
+O Algoritmo~\ref{algo:k-conectividade} usa o Algoritmo~\ref{algo:EdmondsKarp} $n(n-1)$ vezes, pelo que a complexidade do primeiro será $O(n^3 m^2)$.
+
+Para descobrir um exemplo de $k$ ligações que quebradas façam a rede não ser conexa usámos o raciocínio de que quando o Algoritmo~\ref{algo:EdmondsKarp} termina as ligações que fazem parte de caminhos disjuntos estarão invertidas em comparação com o grafo original. Consequentemente se do conjunto de ligações invertidas escolhermos $k$ que pertençam a caminhos disjuntos obtemos um conjunto de ligações que se quebradas tornam o grafo desconexo. Uma forma simples de escolher ligações de caminhos disjuntos é escolher as $k$ ligações de entre as que saem da origem ou de entre as que entram no destino.
 
 %\section{Visualizador de Grafos}
 
